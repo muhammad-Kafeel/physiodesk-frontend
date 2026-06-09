@@ -1,0 +1,136 @@
+.wp-wrap { max-width: 860px; }
+
+.wp-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--primary);
+  margin-bottom: 16px;
+}
+.wp-back:hover { text-decoration: underline; }
+
+.wp-header {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  margin-bottom: 16px; flex-wrap: wrap; gap: 12px;
+}
+.wp-title { font-size: 22px; font-weight: 800; color: var(--gray-800); margin-bottom: 4px; }
+.wp-sub   { font-size: 13px; color: var(--gray-400); }
+
+.wp-download-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--teal); color: white; text-decoration: none;
+  padding: 9px 18px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700; transition: var(--transition);
+}
+.wp-download-btn:hover { background: #0F766E; }
+
+/* Patient card */
+.wp-patient-card {
+  display: flex; align-items: center; gap: 14px;
+  background: white; border: 1px solid var(--gray-200); border-radius: var(--radius-md);
+  padding: 16px; margin-bottom: 14px; flex-wrap: wrap;
+}
+.wp-patient-avatar {
+  width: 48px; height: 48px; border-radius: 50%;
+  background: var(--teal); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700; flex-shrink: 0;
+}
+.wp-patient-name { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+.wp-patient-sub  { font-size: 13px; color: var(--gray-400); }
+
+/* Notices */
+.wp-notice {
+  padding: 12px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; margin-bottom: 14px; line-height: 1.6;
+}
+.wp-notice-info { background: #DBEAFE; color: #1E40AF; border: 1px solid #93C5FD; }
+.wp-notice-warn { background: #FEF9C3; color: #92400E; border: 1px solid #FDE047; }
+
+/* Form */
+.wp-form {
+  background: white; border-radius: var(--radius-md);
+  border: 1px solid var(--gray-200); padding: 28px; box-shadow: var(--shadow-sm);
+}
+
+/* Letterhead */
+.wp-letterhead {
+  display: flex; justify-content: space-between; align-items: flex-start;
+  padding-bottom: 20px; margin-bottom: 20px;
+  border-bottom: 3px solid var(--primary); flex-wrap: wrap; gap: 12px;
+}
+.wp-lh-clinic { font-size: 16px; font-weight: 800; color: var(--primary); margin-bottom: 4px; }
+.wp-lh-doc    { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+.wp-lh-spec   { font-size: 12px; color: var(--teal); font-weight: 600; }
+.wp-lh-right  { text-align: right; }
+.wp-lh-date   { font-size: 13px; color: var(--gray-600); }
+.wp-lh-rx-no  { font-size: 12px; color: var(--gray-400); margin-top: 4px; }
+
+/* Fields */
+.wp-field { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+.wp-label {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 700; color: var(--gray-600);
+}
+.wp-input {
+  border: 1.5px solid var(--gray-200); border-radius: var(--radius-sm);
+  padding: 10px 14px; font-size: 13px; outline: none; transition: var(--transition);
+  font-family: inherit; width: 100%;
+}
+.wp-input:focus   { border-color: var(--teal); }
+.wp-input:disabled{ background: var(--gray-50); color: var(--gray-600); }
+.wp-textarea { resize: vertical; min-height: 80px; }
+
+/* Medicines section */
+.wp-medicines-section {
+  background: var(--gray-50); border-radius: var(--radius-md);
+  padding: 16px; margin-bottom: 16px;
+}
+.wp-add-med-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: var(--teal); color: white; border: none; cursor: pointer;
+  padding: 7px 14px; border-radius: var(--radius-sm);
+  font-size: 12px; font-weight: 700; transition: var(--transition);
+}
+.wp-add-med-btn:hover { background: #0F766E; }
+
+.wp-med-list { display: flex; flex-direction: column; gap: 10px; }
+.wp-med-row  { display: flex; align-items: flex-start; gap: 10px; }
+.wp-med-num  {
+  width: 28px; height: 28px; border-radius: 50%;
+  background: var(--primary); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 700; flex-shrink: 0; margin-top: 10px;
+}
+.wp-med-fields {
+  flex: 1; display: grid;
+  grid-template-columns: 2fr 2fr 1fr 2fr; gap: 8px;
+}
+.wp-del-med {
+  background: #FEE2E2; border: none; cursor: pointer; color: #DC2626;
+  border-radius: var(--radius-sm); padding: 8px; display: flex;
+  margin-top: 10px; flex-shrink: 0;
+}
+.wp-del-med:hover { background: #FECACA; }
+
+/* Grid */
+.wp-grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+
+/* Footer */
+.wp-footer {
+  display: flex; justify-content: flex-end; gap: 12px;
+  margin-top: 24px; padding-top: 20px; border-top: 1px solid var(--gray-200);
+}
+
+/* Spinner */
+.auth-spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.4); border-top-color: white;
+  border-radius: 50%; animation: spin .6s linear infinite;
+}
+
+@media (max-width: 700px) {
+  .wp-med-fields { grid-template-columns: 1fr 1fr; }
+  .wp-grid-2     { grid-template-columns: 1fr; }
+}
+@media (max-width: 480px) {
+  .wp-med-fields { grid-template-columns: 1fr; }
+}
