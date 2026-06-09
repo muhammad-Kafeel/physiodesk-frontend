@@ -1,3 +1,4 @@
+import { BrowserRouter } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
 import AppRouter from './routes/AppRouter';
 import { ToastContainer } from 'react-toastify';
@@ -8,10 +9,12 @@ import './index.css';
 
 function App() {
   return (
-    <AuthProvider>
-      <AppRouter />
-      <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
-    </AuthProvider>
+    <BrowserRouter>
+      <AuthProvider>
+        <AppRouter />
+        <ToastContainer position="top-right" autoClose={3000} hideProgressBar={false} />
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
