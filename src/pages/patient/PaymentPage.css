@@ -1,0 +1,49 @@
+.pay-layout { display: grid; grid-template-columns: 1fr 320px; gap: 24px; align-items: start; }
+.pay-form-card {
+  background: white; border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200); padding: 28px; box-shadow: var(--shadow-sm);
+}
+.pay-methods { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.pay-method-card {
+  display: flex; align-items: center; gap: 10px;
+  border: 2px solid var(--gray-200); border-radius: var(--radius-md);
+  padding: 14px 16px; background: white; cursor: pointer;
+  transition: var(--transition); position: relative;
+}
+.pay-method-card:hover { border-color: var(--primary); }
+.pay-method-icon  { font-size: 22px; }
+.pay-method-label { font-size: 13px; font-weight: 700; color: var(--gray-800); flex: 1; text-align: left; }
+.pay-method-check {
+  width: 20px; height: 20px; border-radius: 50%;
+  background: var(--primary); color: white;
+  font-size: 11px; display: flex; align-items: center; justify-content: center;
+  font-weight: 700;
+}
+.pay-instructions {
+  display: flex; gap: 10px; background: #EFF6FF;
+  border: 1px solid #BFDBFE; border-radius: var(--radius-sm);
+  padding: 14px; margin-bottom: 16px;
+}
+.pay-instructions svg { color: #2563EB; flex-shrink: 0; margin-top: 2px; }
+.pay-inst-title { font-size: 13px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+.pay-inst-text  { font-size: 12px; color: var(--gray-600); line-height: 1.6; }
+.pay-ref-hint   { font-size: 11px; color: var(--gray-400); margin-top: 4px; }
+.pay-summary-card {
+  background: white; border-radius: var(--radius-lg);
+  border: 1px solid var(--gray-200); padding: 20px;
+  box-shadow: var(--shadow-sm); position: sticky; top: 128px;
+}
+.pay-success {
+  max-width: 480px; margin: 80px auto; text-align: center;
+  background: white; border-radius: var(--radius-lg);
+  padding: 48px; border: 1px solid var(--gray-200);
+  box-shadow: var(--shadow-md);
+}
+.pay-success svg { margin: 0 auto 20px; }
+.pay-success h2 { font-size: 24px; font-weight: 800; color: var(--gray-800); margin-bottom: 8px; }
+.pay-success p  { font-size: 14px; color: var(--gray-600); margin-bottom: 24px; line-height: 1.6; }
+.pay-success-actions { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+@media (max-width: 768px) {
+  .pay-layout  { grid-template-columns: 1fr; }
+  .pay-methods { grid-template-columns: 1fr; }
+}

@@ -1,2 +1,15 @@
-﻿const Unauthorized = () => (<div className='auth-wrapper'><div className='text-center'><h1 className='display-1 text-danger'>403</h1><p className='lead'>You don't have access to this page</p><a href='/' className='btn btn-primary'>Go Home</a></div></div>)
-export default Unauthorized
+import { Link } from "react-router-dom";
+import Layout from "../components/layout/Layout";
+
+export default function Unauthorized() {
+  return (
+    <Layout>
+      <div style={{textAlign:"center", padding:"80px 16px"}}>
+        <p style={{fontSize:80}}>🚫</p>
+        <h1 style={{fontSize:28, fontWeight:800, color:"var(--gray-800)", margin:"16px 0 8px"}}>Access Denied</h1>
+        <p style={{fontSize:15, color:"var(--gray-400)", marginBottom:28}}>You do not have permission to view this page.</p>
+        <Link to="/" className="btn-primary-pd">Go back to Home</Link>
+      </div>
+    </Layout>
+  );
+}
