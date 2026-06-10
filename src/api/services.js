@@ -23,21 +23,18 @@ export const doctorAPI = {
   addTimeSlot:     (data)   => api.post('/doctor/time-slots', data),
   deleteTimeSlot:  (id)     => api.delete(`/doctor/time-slots/${id}`),
   getAppointments: ()       => api.get('/doctor/appointments'),
-  confirmAppt:     (id)     => api.post(`/appointments/${id}/confirm`),
-  completeAppt:    (id)     => api.post(`/appointments/${id}/complete`),
+  confirmAppt:     (id)     => api.post(`/doctor/appointments/${id}/confirm`),  // ✅ correct
+  completeAppt:    (id)     => api.post(`/doctor/appointments/${id}/complete`), // ✅ correct
 };
 
 // ── Patient ───────────────────────────────────────────────────────────────────
 export const patientAPI = {
   getMyProfile:    ()     => api.get('/patient/profile'),
   myProfile:       ()     => api.get('/patient/profile'),
-  // Create profile (multipart — needs date_of_birth & gender)
   createProfile:   (data) => api.post('/patient/profile', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  // Update profile: JSON PUT (no file)
   updateProfile:   (data) => api.put('/patient/profile', data),
-  // Update profile with photo: POST + _method=PUT (multipart)
   updateProfileWithPhoto: (data) => api.post('/patient/profile', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
@@ -77,8 +74,8 @@ export const paymentAPI = {
 
 // ── Prescriptions ─────────────────────────────────────────────────────────────
 export const prescriptionAPI = {
-  getById:     (id)               => api.get(`/prescriptions/${id}`),
-  downloadPdf: (id)               => api.get(`/prescriptions/${id}/download`, { responseType: 'blob' }),
+  getById:     (id)                  => api.get(`/prescriptions/${id}`),
+  downloadPdf: (id)                  => api.get(`/prescriptions/${id}/download`, { responseType: 'blob' }),
   create:      (appointmentId, data) => api.post(`/appointments/${appointmentId}/prescriptions`, data),
 };
 
