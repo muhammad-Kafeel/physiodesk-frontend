@@ -11,8 +11,11 @@
   --gray-100:       #F3F4F6;
   --gray-200:       #E5E7EB;
   --gray-400:       #9CA3AF;
+  --gray-500:       #6B7280;
   --gray-600:       #4B5563;
+  --gray-700:       #374151;
   --gray-800:       #1F2937;
+  --gray-900:       #111827;
   --white:          #FFFFFF;
   --shadow-sm:      0 1px 3px rgba(0,0,0,.08);
   --shadow-md:      0 4px 12px rgba(0,0,0,.10);
@@ -28,17 +31,14 @@
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background: var(--gray-50);
-  color: var(--gray-800);
-  line-height: 1.5;
+  background: var(--gray-50); color: var(--gray-800); line-height: 1.5;
 }
 
-a { text-decoration: none; color: inherit; }
-
+a   { text-decoration: none; color: inherit; }
 img { max-width: 100%; display: block; }
 
 /* ── Scrollbar ── */
-::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar       { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: var(--gray-100); }
 ::-webkit-scrollbar-thumb { background: var(--gray-400); border-radius: 99px; }
 
@@ -46,7 +46,8 @@ img { max-width: 100%; display: block; }
 .pd-container { max-width: 1200px; margin: 0 auto; padding: 0 16px; }
 .pd-section   { padding: 24px 0; }
 .pd-card      { background: var(--white); border-radius: var(--radius-md); box-shadow: var(--shadow-sm); padding: 16px; }
-.pd-badge     { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
+
+.pd-badge           { display: inline-block; padding: 3px 10px; border-radius: 99px; font-size: 12px; font-weight: 600; }
 .pd-badge-primary   { background: var(--primary-light); color: var(--primary); }
 .pd-badge-success   { background: #DCFCE7; color: #16A34A; }
 .pd-badge-warning   { background: #FEF9C3; color: #CA8A04; }
@@ -55,74 +56,68 @@ img { max-width: 100%; display: block; }
 
 /* ── Buttons ── */
 .btn-primary-pd {
-  background: var(--primary);
-  color: var(--white);
-  border: none;
-  padding: 10px 22px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  background: var(--primary); color: var(--white); border: none;
+  padding: 10px 22px; border-radius: var(--radius-sm);
+  font-size: 14px; font-weight: 600; cursor: pointer;
+  transition: var(--transition); display: inline-flex; align-items: center; gap: 6px;
 }
-.btn-primary-pd:hover { background: var(--primary-dark); }
+.btn-primary-pd:hover    { background: var(--primary-dark); color: white; }
+.btn-primary-pd:disabled { opacity: .6; cursor: not-allowed; }
 
 .btn-outline-pd {
-  background: transparent;
-  color: var(--primary);
-  border: 1.5px solid var(--primary);
-  padding: 9px 20px;
-  border-radius: var(--radius-sm);
-  font-size: 14px;
-  font-weight: 600;
-  cursor: pointer;
-  transition: var(--transition);
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
+  background: transparent; color: var(--primary); border: 1.5px solid var(--primary);
+  padding: 9px 20px; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600;
+  cursor: pointer; transition: var(--transition); display: inline-flex; align-items: center; gap: 6px;
 }
 .btn-outline-pd:hover { background: var(--primary-light); }
 
 /* ── Section headers ── */
-.pd-section-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.pd-section-title { font-size: 18px; font-weight: 700; color: var(--gray-800); }
-.pd-view-all { font-size: 13px; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 4px; }
+.pd-section-head  { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.pd-section-title { font-size: 16px; font-weight: 700; color: var(--gray-800); }
+.pd-view-all      { font-size: 13px; color: var(--primary); font-weight: 600; display: flex; align-items: center; gap: 4px; }
 .pd-view-all:hover { text-decoration: underline; }
 
-/* ── Horizontal scroll row ── */
-.pd-scroll-row {
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  padding-bottom: 8px;
-  scrollbar-width: none;
-}
+/* ── Scroll row ── */
+.pd-scroll-row { display: flex; gap: 12px; overflow-x: auto; padding-bottom: 8px; scrollbar-width: none; }
 .pd-scroll-row::-webkit-scrollbar { display: none; }
 
-/* ── Star rating ── */
+/* ── Stars ── */
 .pd-stars { color: var(--amber); display: flex; align-items: center; gap: 2px; }
 
 /* ── Spinner ── */
 .pd-spinner {
-  width: 36px; height: 36px;
-  border: 3px solid var(--gray-200);
-  border-top-color: var(--primary);
-  border-radius: 50%;
-  animation: spin .7s linear infinite;
-  margin: 40px auto;
+  width: 36px; height: 36px; border: 3px solid var(--gray-200);
+  border-top-color: var(--primary); border-radius: 50%;
+  animation: spin .7s linear infinite; margin: 40px auto;
 }
-@keyframes spin { to { transform: rotate(360deg); } }
+
+/* ── Animations ── */
+@keyframes spin    { to { transform: rotate(360deg); } }
+@keyframes shimmer {
+  0%   { background-position: -400px 0; }
+  100% { background-position:  400px 0; }
+}
 
 /* ── Empty state ── */
-.pd-empty { text-align: center; padding: 48px 16px; color: var(--gray-400); }
+.pd-empty     { text-align: center; padding: 48px 16px; color: var(--gray-400); }
 .pd-empty svg { margin: 0 auto 12px; opacity: .4; }
-.pd-empty p  { font-size: 15px; }
+.pd-empty p   { font-size: 15px; }
 
-/* ── Toast override ── */
+/* ── Toast ── */
 .Toastify__toast { border-radius: var(--radius-sm) !important; font-size: 14px !important; }
 
-/* ── Main layout offset for fixed header ── */
+/* ── Layout offset for fixed header ── */
 .pd-main { padding-top: 118px; min-height: 100vh; }
+
+/* ── Auth spinner (form buttons) ── */
+.auth-spinner {
+  display: inline-block; width: 16px; height: 16px;
+  border: 2px solid rgba(255,255,255,.4); border-top-color: white;
+  border-radius: 50%; animation: spin .6s linear infinite;
+}
+
+/* ── Responsive helpers ── */
+@media (max-width: 768px) {
+  .pd-main    { padding-top: 68px; }
+  .pd-section { padding: 16px 0; }
+}
