@@ -1,0 +1,172 @@
+.bd-wrap { padding-bottom: 60px; }
+
+/* Back button */
+.bd-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--primary);
+  background: none; border: none; cursor: pointer;
+  padding: 12px 0; transition: var(--transition);
+}
+.bd-back:hover { gap: 10px; }
+
+/* Cover */
+.bd-cover-wrap {
+  width: 100%; max-height: 420px; overflow: hidden;
+  margin-bottom: 32px;
+}
+.bd-cover-img {
+  width: 100%; height: 420px; object-fit: cover;
+  display: block;
+}
+
+/* Layout */
+.bd-layout {
+  display: grid; grid-template-columns: 1fr 300px;
+  gap: 40px; align-items: start;
+}
+
+/* Article */
+.bd-article { min-width: 0; }
+
+.bd-meta-top { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+.bd-type-badge {
+  font-size: 12px; font-weight: 700; padding: 4px 12px;
+  border-radius: 99px;
+}
+.bd-cat-badge {
+  font-size: 12px; padding: 4px 12px; border-radius: 99px;
+  background: var(--gray-100); color: var(--gray-600); font-weight: 600;
+}
+
+.bd-title {
+  font-size: 28px; font-weight: 900; color: var(--gray-900);
+  line-height: 1.3; margin-bottom: 20px;
+}
+
+/* Author row */
+.bd-author-row { display: flex; align-items: center; gap: 14px; margin-bottom: 20px; }
+.bd-author-avatar {
+  width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+  background: var(--teal); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 20px; font-weight: 700;
+}
+.bd-author-name { font-size: 15px; font-weight: 700; color: var(--gray-800); margin-bottom: 4px; }
+.bd-meta-pills {
+  display: flex; align-items: center; gap: 14px;
+  font-size: 12px; color: var(--gray-400); flex-wrap: wrap;
+}
+.bd-meta-pills span { display: flex; align-items: center; gap: 4px; }
+
+.bd-divider { border: none; border-top: 1px solid var(--gray-200); margin: 24px 0; }
+
+/* Excerpt */
+.bd-excerpt {
+  font-size: 17px; color: var(--gray-600); line-height: 1.8;
+  font-style: italic; border-left: 4px solid var(--teal);
+  padding-left: 20px; margin-bottom: 28px; background: var(--gray-50);
+  padding: 16px 20px; border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+
+/* Content */
+.bd-content { font-size: 15px; line-height: 1.9; color: var(--gray-700); }
+.bd-content p { margin-bottom: 16px; }
+.bd-content p:last-child { margin-bottom: 0; }
+
+/* Tags */
+.bd-tags {
+  display: flex; align-items: center; gap: 8px;
+  margin-top: 28px; flex-wrap: wrap;
+}
+.bd-tag {
+  font-size: 12px; font-weight: 600; padding: 4px 12px;
+  border-radius: 99px; background: var(--gray-100); color: var(--gray-600);
+  border: 1px solid var(--gray-200); transition: var(--transition);
+}
+.bd-tag:hover { background: var(--primary-light); color: var(--primary); border-color: var(--primary); }
+
+/* Author card */
+.bd-author-card {
+  display: flex; align-items: center; gap: 16px;
+  background: var(--gray-50); border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); padding: 20px;
+}
+.bd-author-card-avatar {
+  width: 60px; height: 60px; border-radius: 50%; flex-shrink: 0;
+  background: var(--teal); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 24px; font-weight: 700;
+}
+.bd-author-card-label { font-size: 11px; color: var(--gray-400); font-weight: 600; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px; }
+.bd-author-card-name  { font-size: 16px; font-weight: 800; color: var(--gray-800); margin-bottom: 2px; }
+.bd-author-card-role  { font-size: 13px; color: var(--gray-500); }
+
+/* Sidebar */
+.bd-sidebar { display: flex; flex-direction: column; gap: 20px; position: sticky; top: 90px; }
+.bd-sidebar-card {
+  background: white; border: 1px solid var(--gray-200);
+  border-radius: var(--radius-md); padding: 20px; box-shadow: var(--shadow-sm);
+}
+.bd-sidebar-title {
+  font-size: 13px; font-weight: 800; color: var(--gray-800);
+  margin-bottom: 14px; padding-bottom: 10px; border-bottom: 1px solid var(--gray-200);
+}
+
+.bd-sidebar-author { display: flex; align-items: center; gap: 12px; }
+.bd-sa-avatar {
+  width: 44px; height: 44px; border-radius: 50%; flex-shrink: 0;
+  background: var(--primary); color: white;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 18px; font-weight: 700;
+}
+.bd-sa-name { font-size: 14px; font-weight: 700; color: var(--gray-800); }
+.bd-sa-role { font-size: 12px; color: var(--gray-400); margin-top: 2px; }
+
+.bd-info-rows { display: flex; flex-direction: column; gap: 0; }
+.bd-info-row {
+  display: flex; justify-content: space-between; align-items: center;
+  font-size: 13px; padding: 8px 0; border-bottom: 1px solid var(--gray-100);
+}
+.bd-info-row:last-child { border-bottom: none; }
+.bd-info-row span:first-child { color: var(--gray-400); font-weight: 600; }
+.bd-info-row span:last-child  { color: var(--gray-800); font-weight: 700; }
+
+/* CTA sidebar */
+.bd-sidebar-cta {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--teal) 100%);
+  border-radius: var(--radius-md); padding: 24px;
+}
+.bd-cta-btn {
+  display: block; background: white; color: var(--primary);
+  text-align: center; padding: 10px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700; text-decoration: none;
+  transition: var(--transition);
+}
+.bd-cta-btn:hover { background: var(--primary-light); }
+
+/* Skeleton */
+.bd-skeleton { max-width: 760px; margin: 0 auto; }
+.bd-skel-img, .bd-skel-title, .bd-skel-line, .bd-skel-body {
+  background: linear-gradient(90deg, var(--gray-100) 25%, var(--gray-200) 50%, var(--gray-100) 75%);
+  background-size: 200% 100%; animation: shimmer 1.4s infinite;
+  border-radius: var(--radius-sm);
+}
+.bd-skel-img   { height: 320px; border-radius: var(--radius-md); margin-bottom: 24px; }
+.bd-skel-title { height: 36px; width: 80%; margin-bottom: 16px; }
+.bd-skel-line  { height: 14px; margin-bottom: 10px; }
+.bd-skel-short { width: 50%; }
+.bd-skel-body  { height: 300px; margin-top: 24px; }
+@keyframes shimmer { to { background-position: -200% 0; } }
+
+@media (max-width: 900px) {
+  .bd-layout     { grid-template-columns: 1fr; }
+  .bd-sidebar    { position: static; }
+  .bd-cover-img  { height: 260px; }
+  .bd-title      { font-size: 22px; }
+}
+@media (max-width: 576px) {
+  .bd-title      { font-size: 20px; }
+  .bd-excerpt    { font-size: 15px; }
+  .bd-content    { font-size: 14px; }
+  .bd-cover-img  { height: 200px; }
+}

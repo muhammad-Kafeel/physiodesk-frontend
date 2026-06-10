@@ -9,6 +9,7 @@ import RegisterPage      from '../pages/auth/RegisterPage';
 import DoctorListing     from '../pages/patient/DoctorListing';
 import DoctorDetail      from '../pages/patient/DoctorDetail';
 import BlogsPage         from '../pages/patient/BlogsPage';
+import BlogDetail        from '../pages/patient/BlogDetail';
 import PharmacyPage      from '../pages/patient/PharmacyPage';
 import NotFound          from '../pages/NotFound';
 import Unauthorized      from '../pages/Unauthorized';
@@ -70,6 +71,7 @@ export default function AppRouter() {
       <Route path="/doctors/:id" element={<DoctorDetail />} />
       <Route path="/pharmacy"    element={<PharmacyPage />} />
       <Route path="/blogs"       element={<BlogsPage />} />
+      <Route path="/blogs/:slug" element={<BlogDetail />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Auth */}
