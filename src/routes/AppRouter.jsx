@@ -15,6 +15,7 @@ import Unauthorized      from '../pages/Unauthorized';
 
 // Patient pages
 import PatientDashboard  from '../pages/patient/PatientDashboard';
+import PatientProfile    from '../pages/patient/PatientProfile';
 import BookAppointment   from '../pages/patient/BookAppointment';
 import PaymentPage       from '../pages/patient/PaymentPage';
 import MyAppointments    from '../pages/patient/MyAppointments';
@@ -24,20 +25,20 @@ import MedicalRecords    from '../pages/patient/MedicalRecords';
 import ComplaintsPage    from '../pages/patient/ComplaintsPage';
 
 // Doctor pages
-import DoctorDashboard   from '../pages/doctor/DoctorDashboard';
-import DoctorProfilePage from '../pages/doctor/DoctorProfilePage';
+import DoctorDashboard    from '../pages/doctor/DoctorDashboard';
+import DoctorProfilePage  from '../pages/doctor/DoctorProfilePage';
 import DoctorAppointments from '../pages/doctor/DoctorAppointments';
-import WritePrescription from '../pages/doctor/WritePrescription';
-import DoctorBlogs       from '../pages/doctor/DoctorBlogs';
+import WritePrescription  from '../pages/doctor/WritePrescription';
+import DoctorBlogs        from '../pages/doctor/DoctorBlogs';
 
 // Admin pages
-import AdminDashboard    from '../pages/admin/AdminDashboard';
-import ManageUsers       from '../pages/admin/ManageUsers';
-import ManageDoctors     from '../pages/admin/ManageDoctors';
-import ManageMedicines   from '../pages/admin/ManageMedicines';
-import ManageOrders      from '../pages/admin/ManageOrders';
-import ManageComplaints  from '../pages/admin/ManageComplaints';
-import Transactions      from '../pages/admin/Transactions';
+import AdminDashboard   from '../pages/admin/AdminDashboard';
+import ManageUsers      from '../pages/admin/ManageUsers';
+import ManageDoctors    from '../pages/admin/ManageDoctors';
+import ManageMedicines  from '../pages/admin/ManageMedicines';
+import ManageOrders     from '../pages/admin/ManageOrders';
+import ManageComplaints from '../pages/admin/ManageComplaints';
+import Transactions     from '../pages/admin/Transactions';
 
 // Guards
 function PrivateRoute({ children }) {
@@ -64,11 +65,11 @@ export default function AppRouter() {
   return (
     <Routes>
       {/* Public */}
-      <Route path="/"             element={<LandingPage />} />
-      <Route path="/doctors"      element={<DoctorListing />} />
-      <Route path="/doctors/:id"  element={<DoctorDetail />} />
-      <Route path="/pharmacy"     element={<PharmacyPage />} />
-      <Route path="/blogs"        element={<BlogsPage />} />
+      <Route path="/"            element={<LandingPage />} />
+      <Route path="/doctors"     element={<DoctorListing />} />
+      <Route path="/doctors/:id" element={<DoctorDetail />} />
+      <Route path="/pharmacy"    element={<PharmacyPage />} />
+      <Route path="/blogs"       element={<BlogsPage />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Auth */}
@@ -77,6 +78,7 @@ export default function AppRouter() {
 
       {/* Patient */}
       <Route path="/patient/dashboard"       element={<PrivateRoute><PatientDashboard /></PrivateRoute>} />
+      <Route path="/patient/profile"         element={<PrivateRoute><PatientProfile /></PrivateRoute>} />
       <Route path="/patient/appointments"    element={<PrivateRoute><MyAppointments /></PrivateRoute>} />
       <Route path="/patient/orders"          element={<PrivateRoute><MyOrders /></PrivateRoute>} />
       <Route path="/patient/prescriptions"   element={<PrivateRoute><MyPrescriptions /></PrivateRoute>} />
@@ -86,11 +88,11 @@ export default function AppRouter() {
       <Route path="/payment/appointment/:appointmentId" element={<PrivateRoute><PaymentPage /></PrivateRoute>} />
 
       {/* Doctor */}
-      <Route path="/doctor/dashboard"               element={<RoleRoute role="doctor"><DoctorDashboard /></RoleRoute>} />
-      <Route path="/doctor/profile"                 element={<RoleRoute role="doctor"><DoctorProfilePage /></RoleRoute>} />
-      <Route path="/doctor/appointments"            element={<RoleRoute role="doctor"><DoctorAppointments /></RoleRoute>} />
-      <Route path="/doctor/write-prescription/:id"  element={<RoleRoute role="doctor"><WritePrescription /></RoleRoute>} />
-      <Route path="/doctor/blogs"                   element={<RoleRoute role="doctor"><DoctorBlogs /></RoleRoute>} />
+      <Route path="/doctor/dashboard"              element={<RoleRoute role="doctor"><DoctorDashboard /></RoleRoute>} />
+      <Route path="/doctor/profile"                element={<RoleRoute role="doctor"><DoctorProfilePage /></RoleRoute>} />
+      <Route path="/doctor/appointments"           element={<RoleRoute role="doctor"><DoctorAppointments /></RoleRoute>} />
+      <Route path="/doctor/write-prescription/:id" element={<RoleRoute role="doctor"><WritePrescription /></RoleRoute>} />
+      <Route path="/doctor/blogs"                  element={<RoleRoute role="doctor"><DoctorBlogs /></RoleRoute>} />
 
       {/* Admin */}
       <Route path="/admin/dashboard"    element={<RoleRoute role="admin"><AdminDashboard /></RoleRoute>} />

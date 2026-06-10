@@ -11,36 +11,42 @@ export const authAPI = {
 
 // ── Doctor ────────────────────────────────────────────────────────────────────
 export const doctorAPI = {
-  getAll:         (params) => api.get('/doctors', { params }),
-  getById:        (id)     => api.get(`/doctors/${id}`),
-  getMyProfile:   ()       => api.get('/doctor/profile'),
-  createProfile:  (data)   => api.post('/doctor/profile', data, {
+  getAll:          (params) => api.get('/doctors', { params }),
+  getById:         (id)     => api.get(`/doctors/${id}`),
+  getMyProfile:    ()       => api.get('/doctor/profile'),
+  createProfile:   (data)   => api.post('/doctor/profile', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  updateProfile:  (data)   => api.post('/doctor/profile', data, {
-    // Laravel doesn't support PUT with multipart; we use POST + _method=PUT
+  updateProfile:   (data)   => api.post('/doctor/profile', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  addTimeSlot:    (data)   => api.post('/doctor/time-slots', data),
-  deleteTimeSlot: (id)     => api.delete(`/doctor/time-slots/${id}`),
-  getAppointments:()       => api.get('/doctor/appointments'),
-  // Correct endpoints: /appointments/{id}/confirm  (not /doctor/appointments)
-  confirmAppt:    (id)     => api.post(`/appointments/${id}/confirm`),
-  completeAppt:   (id)     => api.post(`/appointments/${id}/complete`),
+  addTimeSlot:     (data)   => api.post('/doctor/time-slots', data),
+  deleteTimeSlot:  (id)     => api.delete(`/doctor/time-slots/${id}`),
+  getAppointments: ()       => api.get('/doctor/appointments'),
+  confirmAppt:     (id)     => api.post(`/appointments/${id}/confirm`),
+  completeAppt:    (id)     => api.post(`/appointments/${id}/complete`),
 };
 
 // ── Patient ───────────────────────────────────────────────────────────────────
 export const patientAPI = {
-  myProfile:         ()     => api.get('/patient/profile'),
-  getMyProfile:      ()     => api.get('/patient/profile'),
-  createProfile:     (data) => api.post('/patient/profile', data),
-  updateProfile:     (data) => api.put('/patient/profile', data),
-  myMedicalRecords:  ()     => api.get('/patient/medical-records'),
-  myPrescriptions:   ()     => api.get('/patient/prescriptions'),
-  myAppointments:    ()     => api.get('/patient/appointments'),
-  myOrders:          ()     => api.get('/patient/orders'),
-  getOrderById:      (id)   => api.get(`/patient/orders/${id}`),
-  myPayments:        ()     => api.get('/patient/payments'),
+  getMyProfile:    ()     => api.get('/patient/profile'),
+  myProfile:       ()     => api.get('/patient/profile'),
+  // Create profile (multipart — needs date_of_birth & gender)
+  createProfile:   (data) => api.post('/patient/profile', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  // Update profile: JSON PUT (no file)
+  updateProfile:   (data) => api.put('/patient/profile', data),
+  // Update profile with photo: POST + _method=PUT (multipart)
+  updateProfileWithPhoto: (data) => api.post('/patient/profile', data, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  myMedicalRecords: ()    => api.get('/patient/medical-records'),
+  myPrescriptions:  ()    => api.get('/patient/prescriptions'),
+  myAppointments:   ()    => api.get('/patient/appointments'),
+  myOrders:         ()    => api.get('/patient/orders'),
+  getOrderById:     (id)  => api.get(`/patient/orders/${id}`),
+  myPayments:       ()    => api.get('/patient/payments'),
 };
 
 // ── Appointments ──────────────────────────────────────────────────────────────
@@ -71,15 +77,15 @@ export const paymentAPI = {
 
 // ── Prescriptions ─────────────────────────────────────────────────────────────
 export const prescriptionAPI = {
-  getById:     (id)              => api.get(`/prescriptions/${id}`),
-  downloadPdf: (id)              => api.get(`/prescriptions/${id}/download`, { responseType: 'blob' }),
+  getById:     (id)               => api.get(`/prescriptions/${id}`),
+  downloadPdf: (id)               => api.get(`/prescriptions/${id}/download`, { responseType: 'blob' }),
   create:      (appointmentId, data) => api.post(`/appointments/${appointmentId}/prescriptions`, data),
 };
 
 // ── Medical Records ───────────────────────────────────────────────────────────
 export const medicalRecordAPI = {
-  getById:      (id)        => api.get(`/medical-records/${id}`),
-  getByPatient: (patientId) => api.get(`/medical-records/patient/${patientId}`),
+  getById:      (id)          => api.get(`/medical-records/${id}`),
+  getByPatient: (patientId)   => api.get(`/medical-records/patient/${patientId}`),
   create:       (appointmentId, data) => api.post(`/appointments/${appointmentId}/medical-records`, data),
 };
 
@@ -100,7 +106,6 @@ export const blogAPI = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   update:    (id, data) => api.post(`/blogs/${id}`, data, {
-    // Use POST + _method=PUT for file uploads
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   delete:    (id)       => api.delete(`/blogs/${id}`),
@@ -108,7 +113,7 @@ export const blogAPI = {
 
 // ── Reviews ───────────────────────────────────────────────────────────────────
 export const reviewAPI = {
-  getDoctorReviews: (doctorId)        => api.get(`/doctors/${doctorId}/reviews`),
+  getDoctorReviews: (doctorId)            => api.get(`/doctors/${doctorId}/reviews`),
   create:           (appointmentId, data) => api.post(`/appointments/${appointmentId}/review`, data),
 };
 
@@ -129,4 +134,3 @@ export const adminAPI = {
   updateOrderStatus: (id, data) => api.put(`/admin/orders/${id}/status`, data),
   getTransactions:   ()         => api.get('/admin/transactions'),
 };
-
