@@ -7,6 +7,20 @@ import { useAuth } from '../context/AuthContext';
 import { toast } from 'react-toastify';
 import './VideoCallPage.css';
 
+// Format date cleanly — handles both "2026-06-12" and ISO strings
+const fmtDate = (d) => {
+  if (!d) return '—';
+  const date = new Date(d);
+  if (isNaN(date)) return d;
+  return date.toLocaleDateString('en-PK', { day: 'numeric', month: 'long', year: 'numeric' });
+};
+
+// Format time — strips seconds if present
+const fmtTime = (t) => {
+  if (!t) return '—';
+  return t.toString().substring(0, 5); // "09:00:00" → "09:00"
+};
+
 export default function VideoCallPage() {
   const { appointmentId }             = useParams();
   const { user }                      = useAuth();
@@ -28,7 +42,7 @@ export default function VideoCallPage() {
           return;
         }
         if (appt.type !== 'video') {
-          toast.error('This is an in-person appointment, not a video call.');
+          toast.error('This is an in-person appointment — no video call needed.');
           navigate(-1);
           return;
         }
@@ -39,17 +53,24 @@ export default function VideoCallPage() {
   }, [appointmentId]);
 
   const startCall = () => {
-    const script    = document.createElement('script');
-    script.src      = 'https://meet.jit.si/external_api.js';
-    script.async    = true;
-    script.onload   = () => initJitsi();
-    script.onerror  = () => toast.error('Failed to load Jitsi. Check your internet connection.');
+    // If Jitsi already loaded, just init directly
+    if (window.JitsiMeetExternalAPI) {
+      setCallStarted(true);
+      setTimeout(() => initJitsi(), 100);
+      return;
+    }
+    const script   = document.createElement('script');
+    script.src     = 'https://meet.jit.si/external_api.js';
+    script.async   = true;
+    script.onload  = () => { setCallStarted(true); setTimeout(() => initJitsi(), 100); };
+    script.onerror = () => { toast.error('Failed to load Jitsi. Check your internet.'); setCallStarted(false); };
     document.body.appendChild(script);
     setCallStarted(true);
   };
 
   const initJitsi = () => {
-    if (!jitsiContainer.current || !appointment) return;
+    if (!jitsiContainer.current || !appointment || !window.JitsiMeetExternalAPI) return;
+    if (jitsiApi.current) return; // already initialized
 
     const roomName = `PhysioDesk-${appointment.video_room_id.replace(/[^a-zA-Z0-9]/g, '-')}`;
     const isDoctor = user?.role === 'doctor';
@@ -75,13 +96,14 @@ export default function VideoCallPage() {
         SHOW_WATERMARK_FOR_GUESTS: false,
         APP_NAME:                  'PhysioDesk',
         TOOLBAR_BUTTONS: [
-          'microphone','camera','desktop','fullscreen',
-          'hangup','chat','raisehand','tileview','videoquality',
+          'microphone', 'camera', 'desktop', 'fullscreen',
+          'hangup', 'chat', 'raisehand', 'tileview', 'videoquality',
         ],
       },
     });
 
     jitsiApi.current.addEventListener('videoConferenceLeft', () => {
+      jitsiApi.current = null;
       setCallEnded(true);
       setCallStarted(false);
     });
@@ -130,19 +152,18 @@ export default function VideoCallPage() {
             </span>
           </div>
           <div className="vc-appt-info">
-            <span><Calendar size={13}/> {appointment.appointment_date}</span>
-            <span><Clock size={13}/> {appointment.appointment_time}</span>
+            <span><Calendar size={13}/> {fmtDate(appointment.appointment_date)}</span>
+            <span><Clock size={13}/> {fmtTime(appointment.appointment_time)}</span>
           </div>
         </div>
 
         <div className="vc-body">
 
-          {/* Lobby */}
+          {/* ── Lobby ── */}
           {!callStarted && !callEnded && (
             <div className="vc-lobby">
               <div className="vc-lobby-card">
 
-                {/* Participants */}
                 <div className="vc-participants">
                   <div className="vc-participant">
                     <div className="vc-avatar vc-avatar-doc">{doc.name?.[0] || 'D'}</div>
@@ -160,32 +181,34 @@ export default function VideoCallPage() {
                 <h2 className="vc-lobby-title">Ready to join?</h2>
                 <p className="vc-lobby-sub">
                   You'll be connected to a secure, encrypted video room.
-                  Make sure your camera and microphone are allowed in your browser.
+                  Allow camera & microphone when your browser asks.
                 </p>
 
-                {/* Room info */}
                 <div className="vc-room-info">
                   <div className="vc-room-row">
-                    <span>Room ID</span>
-                    <code>{appointment.video_room_id}</code>
+                    <span>Date</span>
+                    <span>{fmtDate(appointment.appointment_date)}</span>
+                  </div>
+                  <div className="vc-room-row">
+                    <span>Time</span>
+                    <span>{fmtTime(appointment.appointment_time)}</span>
                   </div>
                   <div className="vc-room-row">
                     <span>Platform</span>
                     <span>Jitsi Meet (Encrypted)</span>
                   </div>
                   <div className="vc-room-row">
-                    <span>Type</span>
-                    <span>📹 Video Call</span>
+                    <span>Room</span>
+                    <code>{appointment.video_room_id}</code>
                   </div>
                 </div>
 
-                {/* Tips */}
                 <div className="vc-tips">
                   <p className="vc-tips-title">Before you join:</p>
                   <ul>
                     <li>✅ Use Chrome or Firefox for best experience</li>
                     <li>✅ Allow camera & microphone when prompted</li>
-                    <li>✅ Ensure you are in a quiet, well-lit area</li>
+                    <li>✅ Be in a quiet, well-lit area</li>
                     <li>✅ Stable internet connection required</li>
                   </ul>
                 </div>
@@ -198,14 +221,14 @@ export default function VideoCallPage() {
             </div>
           )}
 
-          {/* Active call */}
+          {/* ── Active call ── */}
           {callStarted && (
             <div className="vc-call-container">
               <div ref={jitsiContainer} className="vc-jitsi-frame" />
               <div className="vc-call-bar">
                 <div className="vc-call-info">
                   <div className="vc-dot vc-dot-live" />
-                  <span>Live — Dr. {doc.name} & {pat.name}</span>
+                  <span>Live — Dr. {doc.name} &amp; {pat.name}</span>
                 </div>
                 <button className="vc-end-btn" onClick={endCall}>
                   <Phone size={15}/> End Call
@@ -214,7 +237,7 @@ export default function VideoCallPage() {
             </div>
           )}
 
-          {/* Call ended */}
+          {/* ── Call ended ── */}
           {callEnded && (
             <div className="vc-lobby">
               <div className="vc-lobby-card">
@@ -222,10 +245,10 @@ export default function VideoCallPage() {
                 <h2 className="vc-lobby-title">Consultation Ended</h2>
                 <p className="vc-lobby-sub">
                   {isDoctor
-                    ? 'You can now write a prescription for this patient.'
+                    ? 'The consultation is complete. You can now write a prescription.'
                     : 'Your prescription will be available once the doctor writes it.'}
                 </p>
-                <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', marginTop:8 }}>
+                <div style={{ display:'flex', gap:12, justifyContent:'center', flexWrap:'wrap', marginTop:16 }}>
                   {isDoctor && (
                     <Link to={`/doctor/write-prescription/${appointmentId}`} className="btn-primary-pd">
                       ✍️ Write Prescription
@@ -236,7 +259,8 @@ export default function VideoCallPage() {
                       📅 My Appointments
                     </Link>
                   )}
-                  <button className="btn-outline-pd" onClick={() => { setCallEnded(false); startCall(); }}>
+                  <button className="btn-outline-pd"
+                    onClick={() => { setCallEnded(false); setTimeout(() => startCall(), 100); }}>
                     🔄 Rejoin Call
                   </button>
                 </div>
