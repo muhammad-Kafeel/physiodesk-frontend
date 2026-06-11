@@ -41,6 +41,9 @@ import ManageOrders     from '../pages/admin/ManageOrders';
 import ManageComplaints from '../pages/admin/ManageComplaints';
 import Transactions     from '../pages/admin/Transactions';
 
+// Video Call
+import VideoCallPage from '../pages/VideoCallPage';
+
 // Guards
 function PrivateRoute({ children }) {
   const { user, loading } = useAuth();
@@ -66,17 +69,20 @@ export default function AppRouter() {
   return (
     <Routes>
       {/* Public */}
-      <Route path="/"            element={<LandingPage />} />
-      <Route path="/doctors"     element={<DoctorListing />} />
-      <Route path="/doctors/:id" element={<DoctorDetail />} />
-      <Route path="/pharmacy"    element={<PharmacyPage />} />
-      <Route path="/blogs"       element={<BlogsPage />} />
-      <Route path="/blogs/:slug" element={<BlogDetail />} />
+      <Route path="/"             element={<LandingPage />} />
+      <Route path="/doctors"      element={<DoctorListing />} />
+      <Route path="/doctors/:id"  element={<DoctorDetail />} />
+      <Route path="/pharmacy"     element={<PharmacyPage />} />
+      <Route path="/blogs"        element={<BlogsPage />} />
+      <Route path="/blogs/:slug"  element={<BlogDetail />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
       {/* Auth */}
       <Route path="/login"    element={<GuestRoute><LoginPage /></GuestRoute>} />
       <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+
+      {/* Video Call — accessible by both doctor and patient */}
+      <Route path="/video-call/:appointmentId" element={<PrivateRoute><VideoCallPage /></PrivateRoute>} />
 
       {/* Patient */}
       <Route path="/patient/dashboard"       element={<PrivateRoute><PatientDashboard /></PrivateRoute>} />
