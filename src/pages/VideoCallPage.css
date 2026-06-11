@@ -1,42 +1,33 @@
 /* Full page height minus header */
 .vc-wrap {
-  display: flex;
-  flex-direction: column;
-  height: calc(100vh - 118px);
-  background: #0F172A;
-  overflow: hidden;
+  display: flex; flex-direction: column;
+  height: calc(100vh - 118px); background: #0F172A; overflow: hidden;
 }
 
 /* Top bar */
 .vc-topbar {
   display: flex; align-items: center; gap: 16px;
   padding: 10px 20px; background: #1E293B;
-  border-bottom: 1px solid #334155; flex-wrap: wrap;
-  flex-shrink: 0;
+  border-bottom: 1px solid #334155; flex-wrap: wrap; flex-shrink: 0;
 }
 .vc-back {
-  display: flex; align-items: center; gap: 6px;
-  color: #94A3B8; background: none; border: none; cursor: pointer;
+  display: flex; align-items: center; gap: 6px; color: #94A3B8;
+  background: none; border: none; cursor: pointer;
   font-size: 13px; font-weight: 600; transition: color .2s;
 }
 .vc-back:hover { color: white; }
-
 .vc-title-wrap { display: flex; align-items: center; gap: 8px; flex: 1; }
-.vc-dot { width: 8px; height: 8px; border-radius: 50%; background: #6B7280; }
-.vc-dot-live { background: #EF4444; animation: pulse 1.5s infinite; }
+.vc-dot        { width: 8px; height: 8px; border-radius: 50%; background: #6B7280; }
+.vc-dot-live   { background: #EF4444; animation: pulse 1.5s infinite; }
 @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
-.vc-title { font-size: 14px; font-weight: 700; color: white; }
-
-.vc-appt-info { display: flex; gap: 14px; font-size: 12px; color: #94A3B8; }
+.vc-title      { font-size: 14px; font-weight: 700; color: white; }
+.vc-appt-info  { display: flex; gap: 14px; font-size: 12px; color: #94A3B8; }
 .vc-appt-info span { display: flex; align-items: center; gap: 4px; }
 
-/* Body — takes all remaining height */
+/* Body */
 .vc-body {
-  flex: 1;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-  min-height: 0; /* critical for flex children to shrink */
+  flex: 1; overflow: hidden; display: flex;
+  flex-direction: column; min-height: 0;
 }
 
 /* Lobby */
@@ -65,8 +56,7 @@
 .vc-avatar-pat { background: var(--teal); }
 .vc-part-name  { font-size: 13px; font-weight: 700; color: white; }
 .vc-part-role  { font-size: 11px; color: #94A3B8; }
-
-.vc-call-icon {
+.vc-call-icon  {
   width: 52px; height: 52px; border-radius: 50%;
   background: linear-gradient(135deg, #16A34A, #0F766E);
   display: flex; align-items: center; justify-content: center;
@@ -75,6 +65,23 @@
 
 .vc-lobby-title { font-size: 20px; font-weight: 800; color: white; margin-bottom: 8px; }
 .vc-lobby-sub   { font-size: 13px; color: #94A3B8; line-height: 1.7; margin-bottom: 20px; }
+
+/* Early box — appointment not yet started */
+.vc-early-box {
+  background: #1E3A5F; border: 1px solid #2563EB;
+  border-radius: 12px; padding: 20px; margin-bottom: 20px;
+}
+.vc-early-title { font-size: 11px; font-weight: 700; color: #60A5FA; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
+.vc-early-time  { font-size: 20px; font-weight: 800; color: white; margin-bottom: 8px; }
+.vc-early-sub   { font-size: 13px; color: #93C5FD; line-height: 1.6; }
+.vc-countdown   { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 700; color: #FBBF24; }
+
+/* Late box — appointment window expired */
+.vc-late-box {
+  background: #3B1F1F; border: 1px solid #DC2626;
+  border-radius: 12px; padding: 16px; margin-bottom: 20px;
+  font-size: 13px; color: #FCA5A5; line-height: 1.6;
+}
 
 /* Room info */
 .vc-room-info {
@@ -91,10 +98,7 @@
 .vc-room-row code { color: #34D399; font-size: 11px; font-family: monospace; word-break: break-all; }
 
 /* Tips */
-.vc-tips {
-  background: #0F172A; border-radius: 10px; padding: 14px;
-  margin-bottom: 20px; text-align: left;
-}
+.vc-tips { background: #0F172A; border-radius: 10px; padding: 14px; margin-bottom: 20px; text-align: left; }
 .vc-tips-title { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
 .vc-tips ul    { list-style: none; display: flex; flex-direction: column; gap: 5px; }
 .vc-tips li    { font-size: 13px; color: #94A3B8; }
@@ -109,36 +113,27 @@
   box-shadow: 0 4px 20px rgba(22,163,74,.3);
   width: 100%; justify-content: center;
 }
-.vc-join-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(22,163,74,.4); }
+.vc-join-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(22,163,74,.4); }
+.vc-join-disabled {
+  background: #334155 !important; box-shadow: none !important;
+  cursor: not-allowed !important; opacity: .7;
+}
+.vc-join-btn:disabled { background: #334155; box-shadow: none; cursor: not-allowed; opacity: .7; }
 
 .vc-powered    { font-size: 11px; color: #475569; margin-top: 12px; }
 .vc-ended-icon { font-size: 48px; margin-bottom: 14px; }
 
-/* ── Active call container ── */
+/* Active call */
 .vc-call-container {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  min-height: 0; /* critical */
+  display: flex; flex-direction: column; flex: 1; min-height: 0;
 }
-
-/* The actual Jitsi iframe wrapper — must have explicit height */
 .vc-jitsi-frame {
-  flex: 1;
-  min-height: 0;
-  width: 100%;
-  background: #000;
+  flex: 1; min-height: 0; width: 100%; background: #000;
 }
-
-/* Jitsi injects an iframe — make sure it fills the div */
 .vc-jitsi-frame iframe {
-  width: 100% !important;
-  height: 100% !important;
-  border: none;
-  display: block;
+  width: 100% !important; height: 100% !important;
+  border: none; display: block;
 }
-
-/* Bottom bar */
 .vc-call-bar {
   display: flex; align-items: center; justify-content: space-between;
   padding: 10px 20px; background: #1E293B;
@@ -152,8 +147,7 @@
   display: flex; align-items: center; gap: 6px;
   background: #DC2626; color: white; border: none;
   padding: 9px 20px; border-radius: 99px;
-  font-size: 13px; font-weight: 700; cursor: pointer;
-  transition: all .2s;
+  font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s;
 }
 .vc-end-btn:hover { background: #B91C1C; }
 
