@@ -48,3 +48,11 @@
   .ma-avatar { width:40px; height:40px; font-size:15px; }
   .ma-doc-name { font-size:14px; }
 }
+
+.ma-video-btn {
+  font-size: 12px; font-weight: 700; padding: 6px 12px;
+  border-radius: var(--radius-sm); cursor: pointer;
+  background: #16A34A; color: white; text-decoration: none;
+  display: flex; align-items: center; gap: 4px; transition: var(--transition);
+}
+.ma-video-btn:hover { background: #15803D; color: white; }

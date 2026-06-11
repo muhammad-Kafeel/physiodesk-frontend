@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+﻿import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Calendar, Clock, Video, CheckCircle, FileText, ChevronDown, ChevronUp, User } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
@@ -177,6 +177,11 @@ export default function DoctorAppointments() {
                               {acting === a.id ? '...' : <><CheckCircle size={14}/> Confirm</>}
                             </button>
                           )}
+                          {a.status === 'confirmed' && a.type === 'video' && a.video_room_id && (
+                            <Link to={`/video-call/${a.id}`} className="da-btn-video">
+                              <Video size={14}/> Join Video Call
+                            </Link>
+                          )}
                           {a.status === 'confirmed' && (
                             <button className="da-btn-complete"
                               onClick={() => completeAppt(a.id)}
@@ -205,3 +210,4 @@ export default function DoctorAppointments() {
     </DashboardLayout>
   );
 }
+

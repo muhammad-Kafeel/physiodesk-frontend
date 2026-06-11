@@ -1,0 +1,129 @@
+.vc-wrap { display:flex; flex-direction:column; height:calc(100vh - 118px); background:#0F172A; }
+
+/* Top bar */
+.vc-topbar {
+  display:flex; align-items:center; gap:16px;
+  padding:12px 20px; background:#1E293B;
+  border-bottom:1px solid #334155; flex-wrap:wrap;
+}
+.vc-back {
+  display:flex; align-items:center; gap:6px;
+  color:#94A3B8; background:none; border:none; cursor:pointer;
+  font-size:13px; font-weight:600; transition:color .2s;
+}
+.vc-back:hover { color:white; }
+.vc-title-wrap { display:flex; align-items:center; gap:8px; flex:1; }
+.vc-dot {
+  width:8px; height:8px; border-radius:50%;
+  background:#6B7280;
+}
+.vc-dot-live  { background:#EF4444; animation:pulse 1.5s infinite; }
+@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.vc-title { font-size:14px; font-weight:700; color:white; }
+.vc-appt-info {
+  display:flex; gap:14px; font-size:12px; color:#94A3B8;
+}
+.vc-appt-info span { display:flex; align-items:center; gap:4px; }
+
+/* Body */
+.vc-body { flex:1; overflow:hidden; }
+
+/* Lobby */
+.vc-lobby {
+  display:flex; align-items:center; justify-content:center;
+  height:100%; padding:24px;
+}
+.vc-lobby-card {
+  background:#1E293B; border:1px solid #334155;
+  border-radius:20px; padding:40px; max-width:520px; width:100%;
+  text-align:center;
+}
+.vc-ended-card { border-color:#16A34A; }
+
+/* Participants */
+.vc-participants {
+  display:flex; align-items:center; justify-content:center; gap:24px;
+  margin-bottom:28px;
+}
+.vc-participant { display:flex; flex-direction:column; align-items:center; gap:8px; }
+.vc-avatar {
+  width:64px; height:64px; border-radius:50%;
+  display:flex; align-items:center; justify-content:center;
+  font-size:26px; font-weight:800; color:white;
+}
+.vc-avatar-doc { background:var(--primary); }
+.vc-avatar-pat { background:var(--teal); }
+.vc-part-name  { font-size:13px; font-weight:700; color:white; }
+.vc-part-role  { font-size:11px; color:#94A3B8; }
+
+.vc-call-icon {
+  width:56px; height:56px; border-radius:50%;
+  background:linear-gradient(135deg, #16A34A, #0F766E);
+  display:flex; align-items:center; justify-content:center;
+  box-shadow:0 0 0 8px rgba(22,163,74,.15);
+}
+
+.vc-lobby-title { font-size:22px; font-weight:800; color:white; margin-bottom:10px; }
+.vc-lobby-sub   { font-size:14px; color:#94A3B8; line-height:1.7; margin-bottom:24px; }
+
+/* Room info */
+.vc-room-info {
+  background:#0F172A; border:1px solid #334155;
+  border-radius:10px; padding:16px; margin-bottom:20px; text-align:left;
+}
+.vc-room-row {
+  display:flex; justify-content:space-between; align-items:center;
+  padding:6px 0; border-bottom:1px solid #1E293B; font-size:13px;
+}
+.vc-room-row:last-child { border-bottom:none; }
+.vc-room-row span:first-child { color:#64748B; font-weight:600; }
+.vc-room-row span:last-child  { color:#CBD5E1; }
+.vc-room-row code { color:#34D399; font-size:12px; font-family:monospace; }
+
+/* Tips */
+.vc-tips {
+  background:#0F172A; border-radius:10px; padding:16px;
+  margin-bottom:24px; text-align:left;
+}
+.vc-tips-title { font-size:12px; font-weight:700; color:#64748B; text-transform:uppercase; letter-spacing:.5px; margin-bottom:10px; }
+.vc-tips ul    { list-style:none; display:flex; flex-direction:column; gap:6px; }
+.vc-tips li    { font-size:13px; color:#94A3B8; }
+
+/* Join button */
+.vc-join-btn {
+  display:inline-flex; align-items:center; gap:10px;
+  background:linear-gradient(135deg, #16A34A, #0F766E);
+  color:white; border:none; cursor:pointer;
+  padding:14px 36px; border-radius:99px;
+  font-size:15px; font-weight:700; transition:all .2s;
+  box-shadow:0 4px 20px rgba(22,163,74,.3); width:100%; justify-content:center;
+}
+.vc-join-btn:hover { transform:translateY(-2px); box-shadow:0 8px 28px rgba(22,163,74,.4); }
+
+.vc-powered { font-size:11px; color:#475569; margin-top:14px; }
+.vc-ended-icon { font-size:52px; margin-bottom:16px; }
+
+/* Active call */
+.vc-call-container { display:flex; flex-direction:column; height:100%; }
+.vc-jitsi-frame    { flex:1; }
+.vc-call-bar {
+  display:flex; align-items:center; justify-content:space-between;
+  padding:10px 20px; background:#1E293B; border-top:1px solid #334155;
+}
+.vc-call-info {
+  display:flex; align-items:center; gap:8px;
+  font-size:13px; font-weight:600; color:white;
+}
+.vc-end-btn {
+  display:flex; align-items:center; gap:6px;
+  background:#DC2626; color:white; border:none;
+  padding:9px 20px; border-radius:99px;
+  font-size:13px; font-weight:700; cursor:pointer;
+  transition:all .2s;
+}
+.vc-end-btn:hover { background:#B91C1C; }
+
+@media (max-width:576px) {
+  .vc-lobby-card { padding:24px 16px; }
+  .vc-join-btn   { font-size:14px; padding:12px 24px; }
+}

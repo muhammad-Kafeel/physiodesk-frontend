@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+﻿import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { Calendar, Clock, Video, ChevronRight, MapPin } from "lucide-react";
 import Layout from "../../components/layout/Layout";
@@ -117,6 +117,11 @@ export default function MyAppointments() {
                     </span>
                     <p className="ma-fee">Rs. {Number(a.fee).toLocaleString()}</p>
                     <div className="ma-actions">
+                      {a.status === "confirmed" && a.type === "video" && a.video_room_id && (
+                        <Link to={`/video-call/${a.id}`} className="ma-video-btn">
+                          <Video size={12}/> Join Call
+                        </Link>
+                      )}
                       {a.status === "confirmed" && !a.is_paid && (
                         <Link to={`/payment/appointment/${a.id}`} className="ma-pay-btn">
                           Pay Now
@@ -145,3 +150,4 @@ export default function MyAppointments() {
     </Layout>
   );
 }
+
