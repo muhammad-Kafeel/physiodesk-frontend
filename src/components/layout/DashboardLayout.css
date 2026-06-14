@@ -1,0 +1,61 @@
+/* ═══════════════════════════════════════════════════════════════
+   DASHBOARD LAYOUT
+═══════════════════════════════════════════════════════════════ */
+
+.dl-root {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background: var(--gray-50);
+}
+
+.dl-body {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
+.dl-main {
+  flex: 1;
+  min-width: 0;          /* prevent flex overflow */
+  display: flex;
+  flex-direction: column;
+}
+
+.dl-content {
+  flex: 1;
+  padding: 24px;
+  overflow-x: hidden;
+}
+
+/* Mobile-only top bar with hamburger */
+.dl-mobile-bar {
+  display: none;
+  padding: 12px 16px;
+  background: var(--white);
+  border-bottom: 1px solid var(--gray-200);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.dl-hamburger {
+  background: none;
+  border: 1.5px solid var(--gray-200);
+  border-radius: 8px;
+  padding: 6px 8px;
+  cursor: pointer;
+  color: var(--gray-700);
+  display: flex;
+  align-items: center;
+  transition: background .12s;
+}
+.dl-hamburger:hover { background: var(--gray-100); }
+
+/* ── Responsive ─────────────────────────────────────────────── */
+@media (max-width: 768px) {
+  .dl-mobile-bar { display: flex; align-items: center; }
+  .dl-content    { padding: 16px; }
+}
+@media (max-width: 400px) {
+  .dl-content { padding: 12px; }
+}

@@ -87,7 +87,7 @@ export default function LoginPage() {
             </button>
           </form>
 
-          <div className="auth-divider"><span>Test Accounts</span></div>
+          {/* <div className="auth-divider"><span>Test Accounts</span></div>
           <div className="auth-test-accounts">
             {[
               { role: 'Admin',   email: 'admin@physiodesk.com',   pass: 'Admin@12345' },
@@ -99,7 +99,7 @@ export default function LoginPage() {
                 {a.role}
               </button>
             ))}
-          </div>
+          </div> */}
 
           <p className="auth-switch">
             Don't have an account? <Link to="/register">Register here</Link>

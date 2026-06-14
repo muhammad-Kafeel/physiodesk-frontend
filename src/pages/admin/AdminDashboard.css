@@ -97,5 +97,9 @@
   .ad-grid  { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
-  .ad-banner { flex-direction: column; }
+  .ad-banner      { flex-direction: column; padding: 18px 16px; }
+  .ad-title       { font-size: 18px; }
+  .ad-stat-val    { font-size: 18px; }
+  .ad-table-wrap  { overflow-x: auto; }
+  .ad-table       { min-width: 560px; }
 }

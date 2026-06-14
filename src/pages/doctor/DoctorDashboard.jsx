@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import {
   Calendar, CheckCircle, Clock, Users,
-  ChevronRight, Video, UserCheck, FileText, BookOpen
+  ChevronRight, Video, UserCheck, FileText, BookOpen, HeartPulse
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { doctorAPI } from '../../api/services';
@@ -18,7 +18,8 @@ const STATUS_STYLE = {
 };
 
 export default function DoctorDashboard() {
-  const { user } = useAuth();
+  const { user, switchToPatientMode } = useAuth();
+  const navigate = useNavigate();
   const [appts,   setAppts]   = useState([]);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -164,6 +165,22 @@ export default function DoctorDashboard() {
                   <ChevronRight size={16} color="var(--gray-400)" style={{ marginLeft: 'auto' }} />
                 </Link>
               ))}
+
+              {/* Book as Patient — mode switch CTA */}
+              <button
+                className="dd-quick-item"
+                style={{ border: '2px dashed #93C5FD', background: '#EFF6FF', width: '100%', cursor: 'pointer', textAlign: 'left' }}
+                onClick={() => { switchToPatientMode(); navigate('/patient/dashboard'); }}
+              >
+                <div className="dd-quick-icon" style={{ background: '#DBEAFE', color: '#1D4ED8' }}>
+                  <HeartPulse size={20}/>
+                </div>
+                <div>
+                  <p className="dd-quick-label" style={{ color: '#1D4ED8' }}>Book Appointment as Patient</p>
+                  <p className="dd-quick-sub">Switch to patient mode to consult another doctor</p>
+                </div>
+                <ChevronRight size={16} color="#1D4ED8" style={{ marginLeft: 'auto' }} />
+              </button>
             </div>
           </div>
         </div>

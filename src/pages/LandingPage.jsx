@@ -242,7 +242,7 @@ export default function LandingPage() {
                   <p key={t} className="lp-banner-point">✓ {t}</p>
                 ))}
               </div>
-              <Link to="/register?role=doctor" className="btn-primary-pd" style={{ marginTop: 16, display: 'inline-flex' }}>
+              <Link to="/register/doctor" className="btn-primary-pd" style={{ marginTop: 16, display: 'inline-flex' }}>
                 Join as Doctor
               </Link>
             </div>

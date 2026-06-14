@@ -1,64 +1,48 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
+import './Navbar.css';
 
+/**
+ * Navbar — shown at the top of every dashboard page.
+ * On desktop it is a simple top-bar (the Sidebar handles navigation).
+ * On mobile, the hamburger is in DashboardLayout's mobile-bar instead,
+ * so the Navbar stays minimal: logo + user info + logout.
+ */
 const Navbar = () => {
-  const { user, logout, isAdmin, isDoctor, isPatient } = useAuth();
-  const navigate = useNavigate();
+  const { user, logout, isAdmin, isDoctor, portal } = useAuth();
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login');
-  };
+  const dashboardLink =
+    isAdmin()  ? '/admin/dashboard'  :
+    isDoctor() ? '/doctor/dashboard' :
+                 '/patient/dashboard';
 
-  const dashboardLink = isAdmin()
-    ? '/admin/dashboard'
-    : isDoctor()
-    ? '/doctor/dashboard'
-    : '/patient/dashboard';
+  const roleLabel = isAdmin() ? 'Admin' : isDoctor() ? 'Doctor' : 'Patient';
+  const initials  = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
+
+  const portalColor = {
+    patient : 'var(--primary)',
+    doctor  : 'var(--teal)',
+    admin   : '#334155',
+  }[portal] || 'var(--primary)';
 
   return (
-    <nav className="navbar navbar-expand-lg navbar-dark" style={{ background: 'linear-gradient(135deg,#1a73e8,#0d47a1)' }}>
-      <div className="container">
-        <Link className="navbar-brand fw-bold fs-4" to={dashboardLink}>
-          💊 PhysioDesk
-        </Link>
-        <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMain">
-          <span className="navbar-toggler-icon" />
-        </button>
-        <div className="collapse navbar-collapse" id="navMain">
-          <ul className="navbar-nav me-auto mb-2 mb-lg-0">
-            {isPatient() && (
-              <>
-                <li className="nav-item"><Link className="nav-link" to="/doctors">Find Doctors</Link></li>
-                <li className="nav-item"><Link className="nav-link" to="/pharmacy">Pharmacy</Link></li>
-                <li className="nav-item"><Link className="nav-link" to="/blogs">Blogs</Link></li>
-              </>
-            )}
-            {isDoctor() && (
-              <>
-                <li className="nav-item"><Link className="nav-link" to="/doctor/appointments">Appointments</Link></li>
-                <li className="nav-item"><Link className="nav-link" to="/doctor/blogs">Blogs</Link></li>
-              </>
-            )}
-            {isAdmin() && (
-              <>
-                <li className="nav-item"><Link className="nav-link" to="/admin/users">Users</Link></li>
-                <li className="nav-item"><Link className="nav-link" to="/admin/doctors">Doctors</Link></li>
-              </>
-            )}
-          </ul>
-          <div className="d-flex align-items-center gap-3">
-            <span className="text-white-50 small">
-              {user?.name} &nbsp;
-              <span className={`badge ${isAdmin() ? 'bg-danger' : isDoctor() ? 'bg-success' : 'bg-info'}`}>
-                {user?.role}
-              </span>
-            </span>
-            <button className="btn btn-outline-light btn-sm" onClick={handleLogout}>
-              Logout
-            </button>
-          </div>
+    <nav className="nb-nav">
+      <Link to={dashboardLink} className="nb-logo">
+        <div className="nb-logo-icon" style={{ background: portalColor }}>P</div>
+        <span className="nb-logo-name">PhysioDesk</span>
+        <span className="nb-logo-role" style={{ color: portalColor }}>{roleLabel}</span>
+      </Link>
+
+      <div className="nb-right">
+        <span className="nb-greeting">
+          {user?.name?.split(' ')[0]}
+        </span>
+        <div className="nb-avatar" style={{ background: portalColor }}>
+          {initials}
         </div>
+        <button className="nb-logout" onClick={() => logout()}>
+          Sign out
+        </button>
       </div>
     </nav>
   );

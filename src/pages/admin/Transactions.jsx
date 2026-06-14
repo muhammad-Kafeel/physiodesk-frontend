@@ -49,8 +49,8 @@ export default function Transactions() {
         </div>
 
         {loading ? <div className="pd-spinner"/> : (
-          <div style={{background:'white',borderRadius:12,border:'1px solid var(--gray-200)',overflow:'auto',boxShadow:'var(--shadow-sm)'}}>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+          <div style={{background:'white',borderRadius:12,border:'1px solid var(--gray-200)',overflowX:'auto',boxShadow:'var(--shadow-sm)',WebkitOverflowScrolling:'touch'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,minWidth:620}}>
               <thead>
                 <tr style={{background:'var(--gray-50)',borderBottom:'1px solid var(--gray-200)'}}>
                   {['#','Patient','Amount','Method','Type','Status','Date'].map(h => (

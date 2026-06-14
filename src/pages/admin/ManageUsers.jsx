@@ -84,8 +84,8 @@ export default function ManageUsers() {
         </div>
 
         {loading ? <div className="pd-spinner"/> : (
-          <div style={{background:'white',borderRadius:12,border:'1px solid var(--gray-200)',overflow:'hidden',boxShadow:'var(--shadow-sm)'}}>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13}}>
+          <div style={{background:'white',borderRadius:12,border:'1px solid var(--gray-200)',overflowX:'auto',boxShadow:'var(--shadow-sm)',WebkitOverflowScrolling:'touch'}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,minWidth:600}}>
               <thead>
                 <tr style={{borderBottom:'1px solid var(--gray-200)',background:'var(--gray-50)'}}>
                   <th style={{textAlign:'left',padding:'10px 16px',fontWeight:700,fontSize:11,color:'var(--gray-400)',textTransform:'uppercase',letterSpacing:.5}}>User</th>

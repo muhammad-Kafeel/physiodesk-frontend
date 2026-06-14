@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, Upload, User, Phone, MapPin, Heart, AlertCircle, Users } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { patientAPI } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
@@ -17,6 +18,8 @@ const EMPTY_FORM = {
 
 export default function PatientProfile() {
   const { user } = useAuth();
+  const [searchParams]         = useSearchParams();
+  const isWelcome              = searchParams.get('welcome') === '1';
   const [profile,      setProfile]      = useState(null);
   const [loading,      setLoading]      = useState(true);
   const [saving,       setSaving]       = useState(false);
@@ -122,6 +125,41 @@ export default function PatientProfile() {
   return (
     <DashboardLayout>
       <div className="pp-wrap">
+
+        {/* Welcome banner for new registrations */}
+        {isWelcome && (
+          <div style={{
+            background: 'linear-gradient(135deg, #1D4ED8, #0369A1)',
+            borderRadius: 14, padding: '20px 24px',
+            marginBottom: 20, color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: 12,
+          }}>
+            <div>
+              <p style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>
+                🎉 Welcome to PhysioDesk, {user?.name?.split(' ')[0]}!
+              </p>
+              <p style={{ fontSize: 13, opacity: .85 }}>
+                Complete your health profile below so doctors can give you the best care.
+                It only takes 2 minutes.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              <div style={{ textAlign: 'center', background: 'rgba(255,255,255,.15)', borderRadius: 10, padding: '10px 18px' }}>
+                <p style={{ fontSize: 20, fontWeight: 800 }}>1</p>
+                <p style={{ fontSize: 11, opacity: .8 }}>Complete profile</p>
+              </div>
+              <div style={{ textAlign: 'center', background: 'rgba(255,255,255,.15)', borderRadius: 10, padding: '10px 18px' }}>
+                <p style={{ fontSize: 20, fontWeight: 800 }}>2</p>
+                <p style={{ fontSize: 11, opacity: .8 }}>Find a doctor</p>
+              </div>
+              <div style={{ textAlign: 'center', background: 'rgba(255,255,255,.15)', borderRadius: 10, padding: '10px 18px' }}>
+                <p style={{ fontSize: 20, fontWeight: 800 }}>3</p>
+                <p style={{ fontSize: 11, opacity: .8 }}>Book appointment</p>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="pp-header">

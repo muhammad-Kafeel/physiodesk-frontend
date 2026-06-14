@@ -1,15 +1,51 @@
 import api from './axios';
 
-// ── Auth ──────────────────────────────────────────────────────────────────────
-export const authAPI = {
-  register:       (data) => api.post('/auth/register', data),
-  login:          (data) => api.post('/auth/login', data),
-  logout:         ()     => api.post('/auth/logout'),
-  me:             ()     => api.get('/auth/me'),
-  changePassword: (data) => api.post('/auth/change-password', data),
+// ─────────────────────────────────────────────────────────────────────────────
+//  PATIENT AUTH  —  /api/patient/auth/...
+//  Completely isolated from doctor / admin auth.
+//  Same email can be registered independently on doctor side.
+// ─────────────────────────────────────────────────────────────────────────────
+export const patientAuthAPI = {
+  register:       (data) => api.post('/patient/auth/register', data),
+  login:          (data) => api.post('/patient/auth/login',    data),
+  logout:         ()     => api.post('/patient/auth/logout'),
+  me:             ()     => api.get('/patient/auth/me'),
+  changePassword: (data) => api.post('/patient/auth/change-password', data),
 };
 
-// ── Doctor ────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  DOCTOR AUTH  —  /api/doctor/auth/...
+// ─────────────────────────────────────────────────────────────────────────────
+export const doctorAuthAPI = {
+  register:       (data) => api.post('/doctor/auth/register', data),
+  login:          (data) => api.post('/doctor/auth/login',    data),
+  logout:         ()     => api.post('/doctor/auth/logout'),
+  me:             ()     => api.get('/doctor/auth/me'),
+  changePassword: (data) => api.post('/doctor/auth/change-password', data),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  ADMIN AUTH  —  /api/admin/auth/...
+//  No public register endpoint.
+// ─────────────────────────────────────────────────────────────────────────────
+export const adminAuthAPI = {
+  login:          (data) => api.post('/admin/auth/login',    data),
+  logout:         ()     => api.post('/admin/auth/logout'),
+  me:             ()     => api.get('/admin/auth/me'),
+  changePassword: (data) => api.post('/admin/auth/change-password', data),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  LEGACY  (kept briefly during token transition — will be removed)
+// ─────────────────────────────────────────────────────────────────────────────
+export const authAPI = {
+  logout: () => api.post('/auth/logout'),
+  me:     () => api.get('/auth/me'),
+};
+
+// ─────────────────────────────────────────────────────────────────────────────
+//  DOCTOR  (profile, schedule, appointments)
+// ─────────────────────────────────────────────────────────────────────────────
 export const doctorAPI = {
   getAll:          (params) => api.get('/doctors', { params }),
   getById:         (id)     => api.get(`/doctors/${id}`),
@@ -23,30 +59,34 @@ export const doctorAPI = {
   addTimeSlot:     (data)   => api.post('/doctor/time-slots', data),
   deleteTimeSlot:  (id)     => api.delete(`/doctor/time-slots/${id}`),
   getAppointments: ()       => api.get('/doctor/appointments'),
-  confirmAppt:     (id)     => api.post(`/doctor/appointments/${id}/confirm`),  // ✅ correct
-  completeAppt:    (id)     => api.post(`/doctor/appointments/${id}/complete`), // ✅ correct
+  confirmAppt:     (id)     => api.post(`/doctor/appointments/${id}/confirm`),
+  completeAppt:    (id)     => api.post(`/doctor/appointments/${id}/complete`),
 };
 
-// ── Patient ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  PATIENT  (profile, records, prescriptions)
+// ─────────────────────────────────────────────────────────────────────────────
 export const patientAPI = {
-  getMyProfile:    ()     => api.get('/patient/profile'),
-  myProfile:       ()     => api.get('/patient/profile'),
-  createProfile:   (data) => api.post('/patient/profile', data, {
+  getMyProfile:           ()     => api.get('/patient/profile'),
+  myProfile:              ()     => api.get('/patient/profile'),
+  createProfile:          (data) => api.post('/patient/profile', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  updateProfile:   (data) => api.put('/patient/profile', data),
+  updateProfile:          (data) => api.put('/patient/profile', data),
   updateProfileWithPhoto: (data) => api.post('/patient/profile', data, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  myMedicalRecords: ()    => api.get('/patient/medical-records'),
-  myPrescriptions:  ()    => api.get('/patient/prescriptions'),
-  myAppointments:   ()    => api.get('/patient/appointments'),
-  myOrders:         ()    => api.get('/patient/orders'),
-  getOrderById:     (id)  => api.get(`/patient/orders/${id}`),
-  myPayments:       ()    => api.get('/patient/payments'),
+  myMedicalRecords: () => api.get('/patient/medical-records'),
+  myPrescriptions:  () => api.get('/patient/prescriptions'),
+  myAppointments:   () => api.get('/patient/appointments'),
+  myOrders:         () => api.get('/patient/orders'),
+  getOrderById:     (id) => api.get(`/patient/orders/${id}`),
+  myPayments:       () => api.get('/patient/payments'),
 };
 
-// ── Appointments ──────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  APPOINTMENTS
+// ─────────────────────────────────────────────────────────────────────────────
 export const appointmentAPI = {
   myAppointments: ()           => api.get('/patient/appointments'),
   book:           (data)       => api.post('/appointments', data),
@@ -56,7 +96,9 @@ export const appointmentAPI = {
   addReview:      (id, data)   => api.post(`/appointments/${id}/review`, data),
 };
 
-// ── Pharmacy ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  PHARMACY
+// ─────────────────────────────────────────────────────────────────────────────
 export const pharmacyAPI = {
   getMedicines:          (params)   => api.get('/medicines', { params }),
   getMedicineById:       (id)       => api.get(`/medicines/${id}`),
@@ -66,27 +108,35 @@ export const pharmacyAPI = {
   previewPrescription:   (id)       => api.get(`/orders/prescription-preview/${id}`),
 };
 
-// ── Payments ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  PAYMENTS
+// ─────────────────────────────────────────────────────────────────────────────
 export const paymentAPI = {
   payAppointment: (id, data) => api.post(`/payments/appointment/${id}`, data),
   payOrder:       (id, data) => api.post(`/payments/order/${id}`, data),
 };
 
-// ── Prescriptions ─────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  PRESCRIPTIONS
+// ─────────────────────────────────────────────────────────────────────────────
 export const prescriptionAPI = {
   getById:     (id)                  => api.get(`/prescriptions/${id}`),
   downloadPdf: (id)                  => api.get(`/prescriptions/${id}/download`, { responseType: 'blob' }),
   create:      (appointmentId, data) => api.post(`/appointments/${appointmentId}/prescriptions`, data),
 };
 
-// ── Medical Records ───────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  MEDICAL RECORDS
+// ─────────────────────────────────────────────────────────────────────────────
 export const medicalRecordAPI = {
-  getById:      (id)          => api.get(`/medical-records/${id}`),
-  getByPatient: (patientId)   => api.get(`/medical-records/patient/${patientId}`),
+  getById:      (id)        => api.get(`/medical-records/${id}`),
+  getByPatient: (patientId) => api.get(`/medical-records/patient/${patientId}`),
   create:       (appointmentId, data) => api.post(`/appointments/${appointmentId}/medical-records`, data),
 };
 
-// ── Complaints ────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  COMPLAINTS
+// ─────────────────────────────────────────────────────────────────────────────
 export const complaintAPI = {
   list:   ()           => api.get('/complaints'),
   store:  (data)       => api.post('/complaints', data),
@@ -94,7 +144,9 @@ export const complaintAPI = {
   delete: (id)         => api.delete(`/complaints/${id}`),
 };
 
-// ── Blogs ─────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  BLOGS
+// ─────────────────────────────────────────────────────────────────────────────
 export const blogAPI = {
   list:      (params)   => api.get('/blogs', { params }),
   getBySlug: (slug)     => api.get(`/blogs/${slug}`),
@@ -108,13 +160,17 @@ export const blogAPI = {
   delete:    (id)       => api.delete(`/blogs/${id}`),
 };
 
-// ── Reviews ───────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  REVIEWS
+// ─────────────────────────────────────────────────────────────────────────────
 export const reviewAPI = {
   getDoctorReviews: (doctorId)            => api.get(`/doctors/${doctorId}/reviews`),
   create:           (appointmentId, data) => api.post(`/appointments/${appointmentId}/review`, data),
 };
 
-// ── Admin ─────────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+//  ADMIN
+// ─────────────────────────────────────────────────────────────────────────────
 export const adminAPI = {
   getDashboard:      ()         => api.get('/admin/dashboard'),
   getUsers:          (params)   => api.get('/admin/users', { params }),

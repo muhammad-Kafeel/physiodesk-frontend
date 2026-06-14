@@ -121,3 +121,20 @@ img { max-width: 100%; display: block; }
   .pd-main    { padding-top: 68px; }
   .pd-section { padding: 16px 0; }
 }
+
+/* ── Tables: always scrollable on small screens ── */
+.pd-table-scroll { overflow-x: auto; -webkit-overflow-scrolling: touch; }
+.pd-table-scroll table { min-width: 600px; }
+
+/* ── Utility: stack flex children on mobile ── */
+@media (max-width: 576px) {
+  .pd-flex-col-sm {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+  }
+  .pd-full-sm { width: 100% !important; }
+  .pd-hide-sm { display: none !important; }
+}
+@media (max-width: 400px) {
+  .pd-container { padding: 0 12px; }
+}

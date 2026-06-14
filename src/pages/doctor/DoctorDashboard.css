@@ -100,5 +100,9 @@
   .dd-grid  { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
-  .dd-banner { flex-direction: column; align-items: flex-start; }
+  .dd-banner    { flex-direction: column; align-items: flex-start; padding: 20px 16px; }
+  .dd-welcome   { font-size: 18px; }
+  .dd-stat-val  { font-size: 18px; }
+  .dd-appt-item { flex-wrap: wrap; }
+  .dd-appt-right { width: 100%; flex-direction: row; justify-content: space-between; }
 }

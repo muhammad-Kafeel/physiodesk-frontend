@@ -54,7 +54,8 @@
 .pd-search-btn:hover { background: var(--primary-dark); }
 
 /* Actions */
-.pd-header-actions { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.pd-header-actions    { display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+.pd-actions-logged-in { display: flex; align-items: center; gap: 8px; }
 .pd-join-btn {
   font-size: 13px; font-weight: 600; color: var(--primary);
   border: 1.5px solid var(--primary); padding: 7px 14px;
@@ -103,6 +104,28 @@
 .pd-drop-logout:hover { background: #FEF2F2; color: #DC2626; }
 
 .pd-hamburger { display: none; background: none; border: none; cursor: pointer; color: var(--gray-800); padding: 4px; }
+
+/* Mode switch button (Doctor ↔ Patient) */
+.pd-mode-btn {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 600; padding: 6px 12px;
+  border-radius: 99px; border: 1.5px solid; cursor: pointer;
+  transition: all .15s; white-space: nowrap;
+}
+.pd-mode-btn-patient {
+  background: #EFF6FF; color: #1D4ED8;
+  border-color: #93C5FD;
+}
+.pd-mode-btn-patient:hover {
+  background: #1D4ED8; color: white; border-color: #1D4ED8;
+}
+.pd-mode-btn-doctor {
+  background: #F0FDFA; color: #0F766E;
+  border-color: #5EEAD4;
+}
+.pd-mode-btn-doctor:hover {
+  background: #0F766E; color: white; border-color: #0F766E;
+}
 
 /* Nav bar */
 .pd-nav       { background: var(--primary); padding: 0; }

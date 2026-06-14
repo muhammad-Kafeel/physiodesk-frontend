@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Save, Plus, Trash2, Clock, CheckCircle, AlertCircle, Upload } from 'lucide-react';
+import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { doctorAPI } from '../../api/services';
 import { toast } from 'react-toastify';
@@ -12,6 +13,8 @@ const SPECS = [
 ];
 
 export default function DoctorProfilePage() {
+  const [searchParams]   = useSearchParams();
+  const isWelcome        = searchParams.get('welcome') === '1';
   const [profile,    setProfile]    = useState(null);
   const [loading,    setLoading]    = useState(true);
   const [saving,     setSaving]     = useState(false);
@@ -129,6 +132,35 @@ export default function DoctorProfilePage() {
   return (
     <DashboardLayout>
       <div className="dp-wrap">
+
+        {/* Welcome banner for new doctor registrations */}
+        {isWelcome && (
+          <div style={{
+            background: 'linear-gradient(135deg, #0F766E, #0E7490)',
+            borderRadius: 14, padding: '20px 24px',
+            marginBottom: 20, color: 'white',
+            display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+            flexWrap: 'wrap', gap: 12,
+          }}>
+            <div>
+              <p style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>
+                🎉 Account created successfully!
+              </p>
+              <p style={{ fontSize: 13, opacity: .85 }}>
+                Now complete your doctor profile below. Upload your PMDC license &amp; degree,
+                set your fee, and submit for admin verification.
+              </p>
+            </div>
+            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+              {['Complete profile', 'Admin verifies (24–48 hr)', 'Go live!'].map((step, i) => (
+                <div key={i} style={{ textAlign: 'center', background: 'rgba(255,255,255,.15)', borderRadius: 10, padding: '10px 18px' }}>
+                  <p style={{ fontSize: 20, fontWeight: 800 }}>{i + 1}</p>
+                  <p style={{ fontSize: 11, opacity: .8 }}>{step}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Header */}
         <div className="dp-header">

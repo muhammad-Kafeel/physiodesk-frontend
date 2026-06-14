@@ -130,7 +130,13 @@
 @media (max-width: 700px) {
   .wp-med-fields { grid-template-columns: 1fr 1fr; }
   .wp-grid-2     { grid-template-columns: 1fr; }
+  .wp-title      { font-size: 18px; }
+  .wp-form       { padding: 18px; }
+  .wp-letterhead { flex-direction: column; }
+  .wp-lh-right   { text-align: left; }
 }
 @media (max-width: 480px) {
   .wp-med-fields { grid-template-columns: 1fr; }
+  .wp-med-row    { flex-direction: column; }
+  .wp-del-med    { margin-top: 0; align-self: flex-end; }
 }

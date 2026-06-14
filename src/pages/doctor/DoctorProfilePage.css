@@ -109,6 +109,10 @@
 }
 
 @media (max-width: 680px) {
-  .dp-grid-2 { grid-template-columns: 1fr; }
+  .dp-grid-2   { grid-template-columns: 1fr; }
   .dp-slot-row { flex-direction: column; }
+  .dp-title    { font-size: 18px; }
+  .dp-tabs     { overflow-x: auto; white-space: nowrap; scrollbar-width: none; }
+  .dp-tabs::-webkit-scrollbar { display: none; }
+  .dp-form-card { padding: 18px; }
 }

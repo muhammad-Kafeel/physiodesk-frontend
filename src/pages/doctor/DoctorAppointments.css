@@ -139,6 +139,14 @@
 @media (max-width: 720px) {
   .da-detail-grid { grid-template-columns: 1fr; }
   .da-card-main   { flex-wrap: wrap; }
+  .da-title       { font-size: 18px; }
+  .da-card-right  { flex-direction: row; align-items: center; width: 100%; justify-content: space-between; }
+  .da-tabs        { overflow-x: auto; flex-wrap: nowrap; scrollbar-width: none; }
+  .da-tabs::-webkit-scrollbar { display: none; }
+}
+@media (max-width: 420px) {
+  .da-actions { gap: 6px; }
+  .da-btn-confirm, .da-btn-complete, .da-btn-rx, .da-btn-video { padding: 8px 12px; font-size: 12px; }
 }
 
 .da-btn-video {
