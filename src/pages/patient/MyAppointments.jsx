@@ -122,7 +122,16 @@ export default function MyAppointments() {
                           <Video size={12}/> Join Call
                         </Link>
                       )}
-                      {a.status === "confirmed" && !a.is_paid && (
+                      {a.status === "confirmed" && a.is_paid && a.type !== "video" && (
+                        <span style={{fontSize:11,fontWeight:700,color:"#16A34A",background:"#DCFCE7",padding:"5px 10px",borderRadius:7}}>✓ Paid</span>
+                      )}
+                      {a.status === "confirmed" && !a.is_paid && a.latest_payment?.status === "pending" && (
+                        <span title="We're verifying your payment — this usually takes a few hours"
+                          style={{fontSize:11,fontWeight:700,color:"#CA8A04",background:"#FEF9C3",padding:"5px 10px",borderRadius:7}}>
+                          Payment under review
+                        </span>
+                      )}
+                      {a.status === "confirmed" && !a.is_paid && a.latest_payment?.status !== "pending" && (
                         <Link to={`/payment/appointment/${a.id}`} className="ma-pay-btn">
                           Pay Now
                         </Link>

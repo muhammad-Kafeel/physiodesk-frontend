@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { FileText, Download, Calendar, ShoppingBag, Pill } from "lucide-react";
 import Layout from "../../components/layout/Layout";
-import { patientAPI } from "../../api/services";
+import { patientAPI, prescriptionAPI } from "../../api/services";
 import { toast } from "react-toastify";
 
 function RxSkeleton() {
@@ -27,6 +27,23 @@ export default function MyPrescriptions() {
       .catch(() => toast.error("Failed to load prescriptions"))
       .finally(() => setLoading(false));
   }, []);
+
+  // Authenticated PDF download (a raw <a> link carries no token and 500s).
+  const downloadRx = async (id) => {
+    try {
+      const res = await prescriptionAPI.downloadPdf(id);
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: "application/pdf" }));
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `prescription-${id}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error("Could not download PDF");
+    }
+  };
 
   return (
     <Layout>
@@ -70,11 +87,10 @@ export default function MyPrescriptions() {
                       <Calendar size={12} style={{display:"inline",marginRight:4}}/>
                       {new Date(rx.created_at).toLocaleDateString("en-PK",{day:"numeric",month:"long",year:"numeric"})}
                     </p>
-                    <a href={`http://localhost:8000/api/prescriptions/${rx.id}/download`}
-                      target="_blank" rel="noreferrer"
-                      style={{display:"inline-flex",alignItems:"center",gap:6,background:"var(--primary)",color:"white",padding:"8px 16px",borderRadius:8,fontSize:13,fontWeight:700,textDecoration:"none"}}>
+                    <button onClick={() => downloadRx(rx.id)}
+                      style={{display:"inline-flex",alignItems:"center",gap:6,background:"var(--primary)",color:"white",padding:"8px 16px",borderRadius:8,fontSize:13,fontWeight:700,border:"none",cursor:"pointer"}}>
                       <Download size={14}/> Download PDF
-                    </a>
+                    </button>
                   </div>
                 </div>
 
@@ -132,8 +148,8 @@ export default function MyPrescriptions() {
                   <p style={{fontSize:13,color:"var(--gray-500)"}}>
                     Want to order these medicines?
                   </p>
-                  <Link to="/pharmacy" className="btn-outline-pd" style={{fontSize:13,padding:"7px 16px"}}>
-                    <ShoppingBag size={14}/> Go to Pharmacy
+                  <Link to={`/pharmacy?prescription=${rx.id}`} className="btn-outline-pd" style={{fontSize:13,padding:"7px 16px"}}>
+                    <ShoppingBag size={14}/> Order These Medicines
                   </Link>
                 </div>
               </div>

@@ -52,20 +52,30 @@ export default function BookAppointment() {
       .finally(() => setLoading(false));
   }, [id, navigate]);
 
-  // F09 — Derive available time slots from the doctor's schedule for the chosen date
-  const availableSlots = useMemo(() => {
-    if (!date || !doctor?.timeSlots?.length) return [];
+  // F09 — Derive the doctor's full slot list for the chosen weekday (before removing
+  // already-booked times), so we can tell "doesn't work this day" apart from "all booked".
+  const daySlots = useMemo(() => {
+    // The API serialises the relation as snake_case `time_slots`; the camelCase
+    // fallback keeps this working if a future endpoint returns it differently.
+    const slots = doctor?.time_slots || doctor?.timeSlots || [];
+    if (!date || !slots.length) return [];
     const dayName = DAY_NAMES[new Date(date + 'T00:00:00').getDay()];
-    const daySlots = doctor.timeSlots.filter(
+    const dayRows = slots.filter(
       s => s.day_of_week === dayName && s.is_available
     );
     const allTimes = [];
-    daySlots.forEach(s => {
+    dayRows.forEach(s => {
       generateSlots(s.start_time.slice(0, 5), s.end_time.slice(0, 5))
         .forEach(t => allTimes.push(t));
     });
-    return [...new Set(allTimes)].sort().filter(t => !takenTimes.includes(t));
-  }, [date, doctor, takenTimes]);
+    return [...new Set(allTimes)].sort();
+  }, [date, doctor]);
+
+  // Bookable times = the day's slots minus the ones already taken.
+  const availableSlots = useMemo(
+    () => daySlots.filter(t => !takenTimes.includes(t)),
+    [daySlots, takenTimes]
+  );
 
   // Clear selected time when date changes and slots differ
   useEffect(() => {
@@ -164,10 +174,15 @@ export default function BookAppointment() {
                   <label className="ba-label"><Clock size={14} /> Select Time</label>
                   {!date ? (
                     <p style={{ fontSize: 13, color: 'var(--gray-400)' }}>Please select a date first.</p>
+                  ) : daySlots.length === 0 ? (
+                    <div className="ba-notice" style={{ marginTop: 0 }}>
+                      <AlertCircle size={15} />
+                      <p>Dr. {u.name} isn't available on this day. Please pick another date.</p>
+                    </div>
                   ) : availableSlots.length === 0 ? (
                     <div className="ba-notice" style={{ marginTop: 0 }}>
                       <AlertCircle size={15} />
-                      <p>No available slots for this day. The doctor may not work on this day. Please try a different date.</p>
+                      <p>All time slots for this day are already booked. Please try another date.</p>
                     </div>
                   ) : (
                     <div className="ba-times-grid">

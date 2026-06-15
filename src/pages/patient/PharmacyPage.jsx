@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { ShoppingCart, Search, Plus, Minus, Trash2, ShoppingBag, Pill, X } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { pharmacyAPI, paymentAPI } from '../../api/services';
@@ -20,6 +20,7 @@ export default function PharmacyPage() {
   const [delivery,  setDelivery]  = useState({ address:'', city:'', phone:'' });
   const [method,    setMethod]    = useState('cod');
   const { user }                  = useAuth();
+  const [searchParams]            = useSearchParams();
 
   useEffect(() => {
     pharmacyAPI.getMedicines({ search, category: category !== 'All' ? category : undefined })
@@ -27,6 +28,41 @@ export default function PharmacyPage() {
       .catch(() => setMedicines([]))
       .finally(() => setLoading(false));
   }, [search, category]);
+
+  // Pre-load the cart from a prescription when arriving via "Order These Medicines".
+  const prescriptionId = searchParams.get('prescription');
+  useEffect(() => {
+    if (!prescriptionId) return;
+    pharmacyAPI.previewPrescription(prescriptionId)
+      .then(r => {
+        const d = r.data.data;
+        const inStock = (d.available_items || []).filter(it => it.in_stock);
+        if (inStock.length === 0) {
+          toast.info('None of the prescribed medicines are currently in stock.');
+          return;
+        }
+        setCart(inStock.map(it => ({
+          id:       it.medicine.id,
+          name:     it.medicine.name,
+          brand:    it.medicine.brand,
+          price:    it.medicine.price,
+          unit:     it.medicine.unit,
+          quantity: it.medicine.quantity,
+          qty:      1,
+        })));
+        setCartOpen(true);
+        const missing = [
+          ...(d.unavailable_items || []).map(u => u.prescribed_name),
+          ...(d.available_items || []).filter(it => !it.in_stock).map(it => it.prescribed_name),
+        ];
+        if (missing.length) {
+          toast.info(`Added in-stock items. Not available: ${missing.join(', ')}`);
+        } else {
+          toast.success('Prescribed medicines added to your cart');
+        }
+      })
+      .catch(() => toast.error('Could not load prescription medicines'));
+  }, [prescriptionId]);
 
   const addToCart = (med) => {
     setCart(prev => {

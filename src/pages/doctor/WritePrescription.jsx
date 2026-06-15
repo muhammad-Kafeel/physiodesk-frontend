@@ -46,6 +46,23 @@ export default function WritePrescription() {
   const updateMed = (i, field, val) =>
     setMedicines(p => p.map((m, idx) => idx === i ? { ...m, [field]: val } : m));
 
+  // Authenticated PDF download (a raw <a> link carries no token and 500s).
+  const downloadRx = async (rxId) => {
+    try {
+      const res = await prescriptionAPI.downloadPdf(rxId);
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'application/pdf' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `prescription-${rxId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch {
+      toast.error('Could not download PDF');
+    }
+  };
+
   const submit = async (e) => {
     e.preventDefault();
     if (existing) { toast.info('Prescription already written.'); return; }
@@ -92,10 +109,9 @@ export default function WritePrescription() {
             <p className="wp-sub">Appointment #{id} · {appt?.appointment_date} at {appt?.appointment_time}</p>
           </div>
           {existing && (
-            <a href={`http://localhost:8000/api/prescriptions/${existing.id}/download`}
-              target="_blank" rel="noreferrer" className="wp-download-btn">
+            <button type="button" onClick={() => downloadRx(existing.id)} className="wp-download-btn">
               <Download size={15}/> Download PDF
-            </a>
+            </button>
           )}
         </div>
 

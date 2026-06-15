@@ -10,12 +10,16 @@ const S_STYLE = {
   refunded:  { bg:'#FDF4FF', color:'#7C3AED' },
 };
 
+const BTN = { fontSize:12, fontWeight:700, padding:'5px 12px', borderRadius:7, border:'none', cursor:'pointer' };
+
 export default function Transactions() {
   const [payments, setPayments] = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [total,    setTotal]    = useState(0);
+  const [actingId, setActingId] = useState(null);
 
-  useEffect(() => {
+  const load = () => {
+    setLoading(true);
     adminAPI.getTransactions()
       .then(r => {
         const list = r.data.data.data || [];
@@ -24,7 +28,39 @@ export default function Transactions() {
       })
       .catch(() => toast.error('Failed to load transactions'))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { load(); }, []);
+
+  const handleConfirm = async (p) => {
+    if (!window.confirm(`Confirm Rs. ${Number(p.amount).toLocaleString()} from ${p.patient?.user?.name || 'patient'}? This marks the payment as received and unlocks the consultation/order.`)) return;
+    setActingId(p.id);
+    try {
+      await adminAPI.confirmPayment(p.id);
+      toast.success('Payment confirmed');
+      load();
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Could not confirm payment');
+    } finally {
+      setActingId(null);
+    }
+  };
+
+  const handleRefund = async (p) => {
+    const reason = window.prompt('Reason for refunding this payment:');
+    if (reason === null) return;                       // admin cancelled the prompt
+    if (!reason.trim()) { toast.error('A refund reason is required'); return; }
+    setActingId(p.id);
+    try {
+      await adminAPI.refundPayment(p.id, { reason: reason.trim() });
+      toast.success('Payment refunded');
+      load();
+    } catch (e) {
+      toast.error(e.response?.data?.message || 'Could not refund payment');
+    } finally {
+      setActingId(null);
+    }
+  };
 
   return (
     <DashboardLayout>
@@ -50,20 +86,22 @@ export default function Transactions() {
 
         {loading ? <div className="pd-spinner"/> : (
           <div style={{background:'white',borderRadius:12,border:'1px solid var(--gray-200)',overflowX:'auto',boxShadow:'var(--shadow-sm)',WebkitOverflowScrolling:'touch'}}>
-            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,minWidth:620}}>
+            <table style={{width:'100%',borderCollapse:'collapse',fontSize:13,minWidth:680}}>
               <thead>
                 <tr style={{background:'var(--gray-50)',borderBottom:'1px solid var(--gray-200)'}}>
-                  {['#','Patient','Amount','Method','Type','Status','Date'].map(h => (
+                  {['#','Patient','Amount','Method','Type','Status','Date','Actions'].map(h => (
                     <th key={h} style={{textAlign:'left',padding:'10px 14px',fontWeight:700,fontSize:11,color:'var(--gray-400)',textTransform:'uppercase',letterSpacing:.5,whiteSpace:'nowrap'}}>{h}</th>
                   ))}
                 </tr>
               </thead>
               <tbody>
                 {payments.length === 0 && (
-                  <tr><td colSpan={7} style={{textAlign:'center',padding:32,color:'var(--gray-400)'}}>No transactions yet</td></tr>
+                  <tr><td colSpan={8} style={{textAlign:'center',padding:32,color:'var(--gray-400)'}}>No transactions yet</td></tr>
                 )}
                 {payments.map(p => {
                   const s = S_STYLE[p.status] || S_STYLE.pending;
+                  const canConfirm = p.status === 'pending' && (p.method === 'bank' || p.method === 'cod');
+                  const canRefund  = p.status === 'completed';
                   return (
                     <tr key={p.id} style={{borderBottom:'1px solid var(--gray-100)'}}>
                       <td style={{padding:'10px 14px',color:'var(--gray-400)',fontFamily:'monospace'}}>{p.id}</td>
@@ -86,6 +124,23 @@ export default function Transactions() {
                       </td>
                       <td style={{padding:'10px 14px',fontSize:12,color:'var(--gray-400)'}}>
                         {new Date(p.created_at).toLocaleDateString('en-PK',{day:'numeric',month:'short',year:'numeric'})}
+                      </td>
+                      <td style={{padding:'10px 14px',whiteSpace:'nowrap'}}>
+                        {canConfirm && (
+                          <button onClick={() => handleConfirm(p)} disabled={actingId===p.id}
+                            style={{...BTN, background:'#16A34A', color:'#fff', opacity: actingId===p.id?0.6:1}}>
+                            {actingId===p.id ? '...' : 'Confirm'}
+                          </button>
+                        )}
+                        {canRefund && (
+                          <button onClick={() => handleRefund(p)} disabled={actingId===p.id}
+                            style={{...BTN, background:'#FEE2E2', color:'#DC2626', opacity: actingId===p.id?0.6:1}}>
+                            {actingId===p.id ? '...' : 'Refund'}
+                          </button>
+                        )}
+                        {!canConfirm && !canRefund && (
+                          <span style={{fontSize:12,color:'var(--gray-300)'}}>—</span>
+                        )}
                       </td>
                     </tr>
                   );

@@ -48,6 +48,7 @@ export default function DoctorAppointments() {
   };
 
   const completeAppt = async (id) => {
+    if (!window.confirm('Mark this appointment as completed? This ends the consultation — neither you nor the patient will be able to join the video call afterward.')) return;
     setActing(id);
     try {
       await doctorAPI.completeAppt(id);
