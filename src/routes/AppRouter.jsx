@@ -13,14 +13,15 @@ import ResetPasswordPage   from '../pages/auth/ResetPasswordPage';
 import EmailVerifiedPage   from '../pages/auth/EmailVerifiedPage';
 
 // ── Public pages ────────────────────────────────────────────────────────────
-import LandingPage   from '../pages/LandingPage';
-import DoctorListing from '../pages/patient/DoctorListing';
-import DoctorDetail  from '../pages/patient/DoctorDetail';
-import BlogsPage     from '../pages/patient/BlogsPage';
-import BlogDetail    from '../pages/patient/BlogDetail';
-import PharmacyPage  from '../pages/patient/PharmacyPage';
-import NotFound      from '../pages/NotFound';
-import Unauthorized  from '../pages/Unauthorized';
+import LandingPage        from '../pages/LandingPage';
+import DoctorListing      from '../pages/patient/DoctorListing';
+import DoctorDetail       from '../pages/patient/DoctorDetail';
+import BlogsPage          from '../pages/patient/BlogsPage';
+import BlogDetail         from '../pages/patient/BlogDetail';
+import PharmacyPage       from '../pages/patient/PharmacyPage';
+import OrderTrackingPage  from '../pages/OrderTrackingPage';
+import NotFound           from '../pages/NotFound';
+import Unauthorized       from '../pages/Unauthorized';
 
 // ── Patient pages ───────────────────────────────────────────────────────────
 import PatientDashboard  from '../pages/patient/PatientDashboard';
@@ -50,7 +51,7 @@ import ManageComplaints from '../pages/admin/ManageComplaints';
 import Transactions     from '../pages/admin/Transactions';
 
 // ── Video call + Payment result ─────────────────────────────────────────────
-import VideoCallPage    from '../pages/VideoCallPage';
+import VideoCallPage     from '../pages/VideoCallPage';
 import PaymentResultPage from '../pages/PaymentResultPage';
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -61,14 +62,6 @@ function Spinner() {
   return <div className="pd-spinner" style={{ marginTop: 100 }} />;
 }
 
-/**
- * GuestRoute — blocks access if the user is already logged into THIS portal.
- *
- * With the new auth system, useAuth() (= usePortalAuth()) automatically
- * returns the correct portal's session based on the current URL.  No portal
- * prop is needed — a logged-in doctor visiting /patient/login gets the patient
- * session (which is empty) and sees the login form, exactly as intended.
- */
 function GuestRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <Spinner />;
@@ -80,11 +73,6 @@ function GuestRoute({ children }) {
   return children;
 }
 
-/**
- * PatientRoute — requires a valid patient session.
- * Reads from the PATIENT session only (usePatientAuth).
- * A doctor logged in on /doctor/* has NO session here → redirected to patient login.
- */
 function PatientRoute({ children }) {
   const { user, loading } = usePatientAuth();
   if (loading) return <Spinner />;
@@ -93,11 +81,6 @@ function PatientRoute({ children }) {
   return children;
 }
 
-/**
- * DoctorRoute — requires a valid doctor session.
- * Reads from the DOCTOR session only (useDoctorAuth).
- * A patient logged in on /patient/* has NO session here → redirected to doctor login.
- */
 function DoctorRoute({ children }) {
   const { user, loading } = useDoctorAuth();
   if (loading) return <Spinner />;
@@ -106,9 +89,6 @@ function DoctorRoute({ children }) {
   return children;
 }
 
-/**
- * AdminRoute — requires a valid admin session.
- */
 function AdminRoute({ children }) {
   const { user, loading } = useAdminAuth();
   if (loading) return <Spinner />;
@@ -117,14 +97,9 @@ function AdminRoute({ children }) {
   return children;
 }
 
-/**
- * AnyAuthRoute — requires a valid session in EITHER patient OR doctor portal.
- * Used for shared routes like video calls.
- */
 function AnyAuthRoute({ children }) {
   const { user: pUser, loading: pLoading } = usePatientAuth();
   const { user: dUser, loading: dLoading } = useDoctorAuth();
-
   if (pLoading || dLoading) return <Spinner />;
   if (!pUser && !dUser)     return <Navigate to="/patient/login" replace />;
   return children;
@@ -142,6 +117,7 @@ export default function AppRouter() {
       <Route path="/doctors"      element={<DoctorListing />} />
       <Route path="/doctors/:id"  element={<DoctorDetail />} />
       <Route path="/pharmacy"     element={<PharmacyPage />} />
+      <Route path="/track-order"  element={<OrderTrackingPage />} />
       <Route path="/blogs"        element={<BlogsPage />} />
       <Route path="/blogs/:slug"  element={<BlogDetail />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
@@ -157,7 +133,7 @@ export default function AppRouter() {
       <Route path="/doctor/login"
         element={<GuestRoute><DoctorLoginPage /></GuestRoute>} />
 
-      {/* ── Admin auth (not linked publicly) ── */}
+      {/* ── Admin auth ── */}
       <Route path="/admin/login"
         element={<GuestRoute><AdminLoginPage /></GuestRoute>} />
 
@@ -169,7 +145,7 @@ export default function AppRouter() {
       <Route path="/register/doctor"
         element={<GuestRoute><DoctorRegisterPage /></GuestRoute>} />
 
-      {/* ── Password reset (per portal) ── */}
+      {/* ── Password reset ── */}
       <Route path="/patient/forgot-password" element={<GuestRoute><ForgotPasswordPage role="patient" /></GuestRoute>} />
       <Route path="/doctor/forgot-password"  element={<GuestRoute><ForgotPasswordPage role="doctor" /></GuestRoute>} />
       <Route path="/admin/forgot-password"   element={<GuestRoute><ForgotPasswordPage role="admin" /></GuestRoute>} />
@@ -177,10 +153,10 @@ export default function AppRouter() {
       <Route path="/doctor/reset-password"   element={<ResetPasswordPage role="doctor" />} />
       <Route path="/admin/reset-password"    element={<ResetPasswordPage role="admin" />} />
 
-      {/* ── Email verification result ── */}
+      {/* ── Email verification ── */}
       <Route path="/email-verified" element={<EmailVerifiedPage />} />
 
-      {/* ── Video call — patient OR doctor ── */}
+      {/* ── Video call ── */}
       <Route path="/video-call/:appointmentId"
         element={<AnyAuthRoute><VideoCallPage /></AnyAuthRoute>} />
 
@@ -200,32 +176,21 @@ export default function AppRouter() {
         element={<PatientRoute><PaymentPage /></PatientRoute>} />
 
       {/* ── Doctor routes ── */}
-      <Route path="/doctor/dashboard"
-        element={<DoctorRoute><DoctorDashboard /></DoctorRoute>} />
-      <Route path="/doctor/profile"
-        element={<DoctorRoute><DoctorProfilePage /></DoctorRoute>} />
-      <Route path="/doctor/appointments"
-        element={<DoctorRoute><DoctorAppointments /></DoctorRoute>} />
+      <Route path="/doctor/dashboard"    element={<DoctorRoute><DoctorDashboard /></DoctorRoute>} />
+      <Route path="/doctor/profile"      element={<DoctorRoute><DoctorProfilePage /></DoctorRoute>} />
+      <Route path="/doctor/appointments" element={<DoctorRoute><DoctorAppointments /></DoctorRoute>} />
       <Route path="/doctor/write-prescription/:id"
         element={<DoctorRoute><WritePrescription /></DoctorRoute>} />
-      <Route path="/doctor/blogs"
-        element={<DoctorRoute><DoctorBlogs /></DoctorRoute>} />
+      <Route path="/doctor/blogs"        element={<DoctorRoute><DoctorBlogs /></DoctorRoute>} />
 
       {/* ── Admin routes ── */}
-      <Route path="/admin/dashboard"
-        element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-      <Route path="/admin/users"
-        element={<AdminRoute><ManageUsers /></AdminRoute>} />
-      <Route path="/admin/doctors"
-        element={<AdminRoute><ManageDoctors /></AdminRoute>} />
-      <Route path="/admin/medicines"
-        element={<AdminRoute><ManageMedicines /></AdminRoute>} />
-      <Route path="/admin/orders"
-        element={<AdminRoute><ManageOrders /></AdminRoute>} />
-      <Route path="/admin/complaints"
-        element={<AdminRoute><ManageComplaints /></AdminRoute>} />
-      <Route path="/admin/transactions"
-        element={<AdminRoute><Transactions /></AdminRoute>} />
+      <Route path="/admin/dashboard"   element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+      <Route path="/admin/users"       element={<AdminRoute><ManageUsers /></AdminRoute>} />
+      <Route path="/admin/doctors"     element={<AdminRoute><ManageDoctors /></AdminRoute>} />
+      <Route path="/admin/medicines"   element={<AdminRoute><ManageMedicines /></AdminRoute>} />
+      <Route path="/admin/orders"      element={<AdminRoute><ManageOrders /></AdminRoute>} />
+      <Route path="/admin/complaints"  element={<AdminRoute><ManageComplaints /></AdminRoute>} />
+      <Route path="/admin/transactions" element={<AdminRoute><Transactions /></AdminRoute>} />
 
       {/* ── 404 ── */}
       <Route path="*" element={<NotFound />} />
