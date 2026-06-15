@@ -2,10 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import {
   Star, MapPin, Clock, Video, Award, CheckCircle,
-  ArrowLeft, Calendar, MessageSquare, ThumbsUp
+  ArrowLeft, Calendar, MessageSquare, ThumbsUp,
+  User, Activity, Stethoscope
 } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { doctorAPI, reviewAPI, appointmentAPI } from '../../api/services';
+import { storageUrl } from '../../utils/helpers'; // F20
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import './DoctorDetail.css';
@@ -102,7 +104,7 @@ export default function DoctorDetail() {
   if (!doctor) return null;
 
   const photoSrc = doctor.profile_photo
-    ? `http://localhost:8000/storage/${doctor.profile_photo}`
+    ? storageUrl(doctor.profile_photo)  // F20
     : null;
 
   const slotsByDay = DAYS.reduce((acc, day) => {
@@ -134,7 +136,7 @@ export default function DoctorDetail() {
               <div className="dd2-photo-wrap">
                 {photoSrc
                   ? <img src={photoSrc} alt={doctor.user?.name} className="dd2-photo" />
-                  : <div className="dd2-photo-placeholder">👨‍⚕️</div>
+                  : <div className="dd2-photo-placeholder"><Stethoscope size={40} color="white"/></div>
                 }
                 {doctor.is_verified && (
                   <span className="dd2-verified"><CheckCircle size={13}/> Verified</span>
@@ -195,14 +197,14 @@ export default function DoctorDetail() {
             {/* Tabs */}
             <div className="dd2-tabs">
               {[
-                { key: 'about',        label: '👤 About' },
-                { key: 'availability', label: '🕐 Availability' },
-                { key: 'reviews',      label: `⭐ Reviews (${reviews.length})` },
+                { key: 'about',        label: 'About',           icon: <User size={14}/> },
+                { key: 'availability', label: 'Availability',    icon: <Clock size={14}/> },
+                { key: 'reviews',      label: `Reviews (${reviews.length})`, icon: <Star size={14}/> },
               ].map(t => (
                 <button key={t.key}
                   className={`dd2-tab ${tab === t.key ? 'active' : ''}`}
                   onClick={() => setTab(t.key)}>
-                  {t.label}
+                  {t.icon} {t.label}
                 </button>
               ))}
             </div>
@@ -346,7 +348,7 @@ export default function DoctorDetail() {
                           placeholder="Share your experience with Dr. {doctor.user?.name}..." />
                       </div>
                       <button type="submit" className="btn-primary-pd" disabled={submitting}>
-                        {submitting ? '...' : '⭐ Submit Review'}
+                        {submitting ? '...' : <><Star size={14}/> Submit Review</>}
                       </button>
                     </form>
                   </div>

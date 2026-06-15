@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Navbar.css';
 
@@ -16,7 +17,7 @@ const Navbar = () => {
     isDoctor() ? '/doctor/dashboard' :
                  '/patient/dashboard';
 
-  const roleLabel = isAdmin() ? 'Admin' : isDoctor() ? 'Doctor' : 'Patient';
+  const roleLabel = isAdmin() ? 'Admin Portal' : isDoctor() ? 'Doctor Portal' : 'Patient Portal';
   const initials  = user?.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase() || 'U';
 
   const portalColor = {
@@ -28,9 +29,16 @@ const Navbar = () => {
   return (
     <nav className="nb-nav">
       <Link to={dashboardLink} className="nb-logo">
-        <div className="nb-logo-icon" style={{ background: portalColor }}>P</div>
-        <span className="nb-logo-name">PhysioDesk</span>
-        <span className="nb-logo-role" style={{ color: portalColor }}>{roleLabel}</span>
+        <div className="nb-logo-mark" style={{ background: portalColor }}>
+          <svg width="18" height="18" viewBox="0 0 18 18" fill="none">
+            <rect x="8" y="2" width="2" height="14" rx="1" fill="white"/>
+            <rect x="2" y="8" width="14" height="2" rx="1" fill="white"/>
+          </svg>
+        </div>
+        <div>
+          <span className="nb-logo-name">PhysioDesk</span>
+          <span className="nb-logo-role" style={{ color: portalColor }}>{roleLabel}</span>
+        </div>
       </Link>
 
       <div className="nb-right">
@@ -41,7 +49,7 @@ const Navbar = () => {
           {initials}
         </div>
         <button className="nb-logout" onClick={() => logout()}>
-          Sign out
+          <LogOut size={14}/> Sign out
         </button>
       </div>
     </nav>

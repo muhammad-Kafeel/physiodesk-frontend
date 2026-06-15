@@ -117,7 +117,10 @@
 .ba-summary-divider { height: 1px; background: var(--gray-200); }
 .ba-summary-total { font-weight: 700; }
 .ba-fee { font-size: 18px; font-weight: 800; color: var(--primary); }
-.ba-payment-note { font-size: 12px; color: var(--gray-400); text-align: center; }
+.ba-payment-note {
+  display: flex; align-items: center; justify-content: center; gap: 6px;
+  font-size: 12px; color: var(--gray-400);
+}
 
 @media (max-width: 900px) {
   .ba-layout { grid-template-columns: 1fr; }

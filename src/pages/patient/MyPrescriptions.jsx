@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { FileText, Download, Calendar, ShoppingBag } from "lucide-react";
+import { FileText, Download, Calendar, ShoppingBag, Pill } from "lucide-react";
 import Layout from "../../components/layout/Layout";
 import { patientAPI } from "../../api/services";
 import { toast } from "react-toastify";
@@ -87,8 +87,8 @@ export default function MyPrescriptions() {
                 {/* Medicines */}
                 {rx.medicines?.length > 0 && (
                   <div style={{marginBottom:14}}>
-                    <p style={{fontSize:11,fontWeight:700,color:"var(--gray-600)",textTransform:"uppercase",letterSpacing:.5,marginBottom:10}}>
-                      💊 Prescribed Medicines ({rx.medicines.length})
+                    <p style={{fontSize:11,fontWeight:700,color:"var(--gray-600)",textTransform:"uppercase",letterSpacing:.5,marginBottom:10,display:"flex",alignItems:"center",gap:6}}>
+                      <Pill size={13}/> Prescribed Medicines ({rx.medicines.length})
                     </p>
                     <div style={{display:"flex",flexDirection:"column",gap:8}}>
                       {rx.medicines.map((m, i) => (
@@ -121,8 +121,8 @@ export default function MyPrescriptions() {
                 {/* Follow-up */}
                 {rx.follow_up_date && (
                   <div style={{display:"flex",alignItems:"center",gap:8,marginTop:12}}>
-                    <span style={{fontSize:13,color:"var(--amber)",fontWeight:700}}>
-                      📅 Follow-up: {new Date(rx.follow_up_date).toLocaleDateString("en-PK",{day:"numeric",month:"long",year:"numeric"})}
+                    <span style={{fontSize:13,color:"var(--warning)",fontWeight:700,display:"flex",alignItems:"center",gap:6}}>
+                      <Calendar size={14}/> Follow-up: {new Date(rx.follow_up_date).toLocaleDateString("en-PK",{day:"numeric",month:"long",year:"numeric"})}
                     </span>
                   </div>
                 )}

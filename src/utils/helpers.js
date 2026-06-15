@@ -1,3 +1,13 @@
+// F20 — Central helper so backend storage URLs are never hardcoded in components.
+// All image/file src attributes should use storageUrl() instead of building
+// the URL manually with http://localhost:8000.
+export const storageUrl = (path) => {
+  if (!path) return null;
+  const base = (import.meta.env.VITE_API_URL || 'http://localhost:8000/api')
+    .replace(/\/api\/?$/, '');
+  return `${base}/storage/${path}`;
+};
+
 export const formatDate = (date) =>
   date ? new Date(date).toLocaleDateString('en-PK', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
 

@@ -1,50 +1,67 @@
 import axios from 'axios';
 
-const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:8000/api',
-  headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
-});
+const BASE_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/api';
 
-// ── Request interceptor ───────────────────────────────────────────────────────
-// Attach the stored token and tell the backend which portal this request is from.
-api.interceptors.request.use((config) => {
-  const token = localStorage.getItem('pd_token');
-  if (token) config.headers.Authorization = `Bearer ${token}`;
+const DEFAULT_HEADERS = {
+  'Content-Type': 'application/json',
+  Accept: 'application/json',
+};
 
-  // X-Portal header is for logging / debugging on the backend only.
-  // It never grants extra privileges — role enforcement is purely server-side.
-  const portal = localStorage.getItem('pd_portal');
-  if (portal) config.headers['X-Portal'] = portal;
+// ── Factory ───────────────────────────────────────────────────────────────────
+// Each portal gets its own axios instance that reads from its OWN token key
+// and, on 401, clears only ITS own session — never touching the other portals.
+function makeInstance(tokenKey, userKey, loginPath) {
+  const instance = axios.create({ baseURL: BASE_URL, headers: DEFAULT_HEADERS });
 
-  return config;
-});
+  // Attach the bearer token that belongs to this specific portal
+  instance.interceptors.request.use((config) => {
+    const token = localStorage.getItem(tokenKey);
+    if (token) config.headers.Authorization = `Bearer ${token}`;
+    return config;
+  });
 
-// ── Response interceptor ──────────────────────────────────────────────────────
-// On 401 (expired / invalid token), clear session data and redirect to the
-// login page that matches the portal the user was working on.
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      const portal = localStorage.getItem('pd_portal') || 'patient';
-
-      // Wipe all session keys
-      localStorage.removeItem('pd_token');
-      localStorage.removeItem('pd_user');
-      localStorage.removeItem('pd_portal');
-      localStorage.removeItem('pd_view_mode');
-
-      // Redirect to the correct portal login — never the wrong one
-      const loginPaths = {
-        patient : '/patient/login',
-        doctor  : '/doctor/login',
-        admin   : '/admin/login',
-      };
-      window.location.href = loginPaths[portal] ?? '/patient/login';
+  // On 401 — clear ONLY this portal's storage, redirect to ITS login page.
+  // The other two portals are completely unaffected.
+  instance.interceptors.response.use(
+    (response) => response,
+    (error) => {
+      if (error.response?.status === 401) {
+        localStorage.removeItem(tokenKey);
+        localStorage.removeItem(userKey);
+        window.location.href = loginPath;
+      }
+      return Promise.reject(error);
     }
+  );
 
-    return Promise.reject(error);
-  }
-);
+  return instance;
+}
 
-export default api;
+// ── Three completely isolated axios instances ─────────────────────────────────
+export const patientApi = makeInstance('pd_patient_token', 'pd_patient_user', '/patient/login');
+export const doctorApi  = makeInstance('pd_doctor_token',  'pd_doctor_user',  '/doctor/login');
+export const adminApi   = makeInstance('pd_admin_token',   'pd_admin_user',   '/admin/login');
+
+// ── Smart selector ────────────────────────────────────────────────────────────
+// Used for endpoints accessible by multiple roles (prescriptions, medical
+// records, complaints, public listings).  Picks the right instance from the
+// current URL path so the correct token is always attached.
+export const getApi = () => {
+  const path = window.location.pathname;
+  if (path.startsWith('/admin'))  return adminApi;
+  if (path.startsWith('/doctor')) return doctorApi;
+  return patientApi;
+};
+
+// ── Default export (backward compat) ─────────────────────────────────────────
+// Files still doing `import api from './axios'` get the smart proxy.
+// These should be migrated to named imports in a future cleanup pass.
+const smartProxy = {
+  get:    (url, config)     => getApi().get(url, config),
+  post:   (url, data, c)    => getApi().post(url, data, c),
+  put:    (url, data, c)    => getApi().put(url, data, c),
+  delete: (url, config)     => getApi().delete(url, config),
+  patch:  (url, data, c)    => getApi().patch(url, data, c),
+};
+
+export default smartProxy;

@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { MapPin, Phone, CreditCard } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { adminAPI } from '../../api/services';
 import { toast } from 'react-toastify';
@@ -92,9 +93,9 @@ export default function ManageOrders() {
                         ))}
                       </div>
                       <div style={{marginTop:12,display:'flex',gap:16,flexWrap:'wrap',fontSize:13,color:'var(--gray-600)'}}>
-                        <span>📍 {o.address}, {o.city}</span>
-                        <span>📞 {o.phone}</span>
-                        <span>💳 {o.payment_method || '—'}</span>
+                        <span style={{display:'flex',alignItems:'center',gap:5}}><MapPin size={13}/> {o.address}, {o.city}</span>
+                        <span style={{display:'flex',alignItems:'center',gap:5}}><Phone size={13}/> {o.phone}</span>
+                        <span style={{display:'flex',alignItems:'center',gap:5}}><CreditCard size={13}/> {o.payment_method || '—'}</span>
                       </div>
                     </div>
                   )}

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Plus, Trash2, Clock, CheckCircle, AlertCircle, Upload } from 'lucide-react';
+import { Save, Plus, Trash2, Clock, CheckCircle, AlertCircle, Upload, Stethoscope } from 'lucide-react';
 import { useSearchParams } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { doctorAPI } from '../../api/services';
@@ -144,7 +144,7 @@ export default function DoctorProfilePage() {
           }}>
             <div>
               <p style={{ fontSize: 18, fontWeight: 800, marginBottom: 4 }}>
-                🎉 Account created successfully!
+                Account created successfully!
               </p>
               <p style={{ fontSize: 13, opacity: .85 }}>
                 Now complete your doctor profile below. Upload your PMDC license &amp; degree,
@@ -179,7 +179,7 @@ export default function DoctorProfilePage() {
         <div className="dp-tabs">
           {['profile','slots'].map(t => (
             <button key={t} className={`dp-tab ${activeTab === t ? 'active' : ''}`} onClick={() => setActiveTab(t)}>
-              {t === 'profile' ? '👤 Profile Info' : '🕐 Time Slots'}
+              {t === 'profile' ? 'Profile Info' : 'Time Slots'}
             </button>
           ))}
         </div>
@@ -193,7 +193,7 @@ export default function DoctorProfilePage() {
               <div className="dp-photo-wrap">
                 {photoSrc
                   ? <img src={photoSrc} alt="Profile" className="dp-photo" />
-                  : <div className="dp-photo-placeholder">👨‍⚕️</div>
+                  : <div className="dp-photo-placeholder"><Stethoscope size={32} color="white"/></div>
                 }
                 <label className="dp-photo-upload">
                   <Upload size={14}/> Change Photo

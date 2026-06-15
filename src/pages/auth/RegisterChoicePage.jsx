@@ -10,7 +10,12 @@ export default function RegisterChoicePage() {
           <ArrowLeft size={14} /> Back
         </Link>
         <Link to="/" className="rc-bar-brand">
-          <div className="rc-bar-icon">P</div>
+          <div className="rc-bar-icon">
+            <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+              <rect x="6" y="1" width="2" height="12" rx="1" fill="white"/>
+              <rect x="1" y="6" width="12" height="2" rx="1" fill="white"/>
+            </svg>
+          </div>
           <span className="rc-bar-name">PhysioDesk</span>
         </Link>
         <div style={{ width: 60 }} />

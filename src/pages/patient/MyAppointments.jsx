@@ -80,7 +80,7 @@ export default function MyAppointments() {
           </div>
         ) : filtered.length === 0 ? (
           <div className="pd-empty">
-            <p style={{fontSize:48}}>📅</p>
+            <Calendar size={48}/>
             <p>No {tab === "all" ? "" : tab} appointments</p>
             <Link to="/doctors" className="btn-primary-pd" style={{marginTop:16}}>
               Find a Doctor
@@ -117,7 +117,7 @@ export default function MyAppointments() {
                     </span>
                     <p className="ma-fee">Rs. {Number(a.fee).toLocaleString()}</p>
                     <div className="ma-actions">
-                      {a.status === "confirmed" && a.type === "video" && a.video_room_id && (
+                      {a.status === "confirmed" && a.is_paid && a.type === "video" && a.video_room_id && (
                         <Link to={`/video-call/${a.id}`} className="ma-video-btn">
                           <Video size={12}/> Join Call
                         </Link>

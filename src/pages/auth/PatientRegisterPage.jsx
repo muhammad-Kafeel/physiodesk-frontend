@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { usePatientAuth } from '../../context/AuthContext';
 import { patientAuthAPI } from '../../api/services';
 import { toast } from 'react-toastify';
 import './AuthPages.css';
@@ -13,7 +13,7 @@ export default function PatientRegisterPage() {
   });
   const [show,    setShow]    = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = usePatientAuth();
   const navigate  = useNavigate();
 
   const handle = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -27,7 +27,7 @@ export default function PatientRegisterPage() {
     try {
       const { data } = await patientAuthAPI.register(form);
       const { user, token } = data.data;
-      login(user, token, 'patient');
+      login(user, token);   // portal is implicit — this is usePatientAuth
       navigate('/patient/dashboard');
     } catch (err) {
       const errs = err.response?.data?.errors;
@@ -42,7 +42,12 @@ export default function PatientRegisterPage() {
     <div className="ap-page">
       <Link to="/" className="ap-panel" style={{ textDecoration: 'none' }}>
         <div className="ap-wordmark">
-          <div className="ap-wordmark-icon">P</div>
+          <div className="ap-wordmark-icon">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              <rect x="12" y="3" width="2" height="20" rx="1" fill="white"/>
+              <rect x="3" y="12" width="20" height="2" rx="1" fill="white"/>
+            </svg>
+          </div>
           <span className="ap-wordmark-name">PhysioDesk</span>
         </div>
       </Link>

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Plus, Edit2, Trash2, Eye, BookOpen, Save, X } from 'lucide-react';
+import { Plus, Edit2, Trash2, Eye, BookOpen, Save, X, Upload } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { blogAPI } from '../../api/services';
 import { toast } from 'react-toastify';
@@ -128,7 +128,7 @@ export default function DoctorBlogs() {
         {showForm && (
           <div className="db-form-card">
             <div className="db-form-head">
-              <p className="db-form-title">{editing ? '✏️ Edit Blog' : '✍️ Write New Blog'}</p>
+              <p className="db-form-title">{editing ? 'Edit Blog' : 'Write New Blog'}</p>
               <button className="db-form-close" onClick={closeForm}><X size={18}/></button>
             </div>
             <form onSubmit={submit}>
@@ -183,7 +183,7 @@ export default function DoctorBlogs() {
                 <div className="db-field">
                   <label className="db-label">Cover Image</label>
                   <label className="db-file-label">
-                    📷 {coverFile ? coverFile.name : 'Choose image (optional)'}
+                    <Upload size={14}/> {coverFile ? coverFile.name : 'Choose image (optional)'}
                     <input type="file" accept="image/*"
                       onChange={e => setCoverFile(e.target.files[0])} hidden />
                   </label>

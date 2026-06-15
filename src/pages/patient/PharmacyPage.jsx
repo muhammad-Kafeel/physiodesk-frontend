@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Search, Plus, Minus, Trash2, ShoppingBag } from 'lucide-react';
+import { ShoppingCart, Search, Plus, Minus, Trash2, ShoppingBag, Pill, X } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { pharmacyAPI, paymentAPI } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
@@ -65,7 +65,7 @@ export default function PharmacyPage() {
       // Pay for order
       await paymentAPI.payOrder(res.data.data.id, { method });
 
-      toast.success('Order placed successfully! 🎉');
+      toast.success('Order placed successfully!');
       setCart([]);
       setCartOpen(false);
       setDelivery({ address:'', city:'', phone:'' });
@@ -118,7 +118,7 @@ export default function PharmacyPage() {
         {loading ? <div className="pd-spinner"/> : (
           medicines.length === 0 ? (
             <div className="pd-empty">
-              <p style={{fontSize:40}}>💊</p>
+              <Pill size={48}/>
               <p>No medicines found</p>
             </div>
           ) : (
@@ -128,7 +128,7 @@ export default function PharmacyPage() {
                   <div className="ph-med-img">
                     {med.image
                       ? <img src={`http://localhost:8000/storage/${med.image}`} alt={med.name}/>
-                      : <span style={{fontSize:36}}>💊</span>
+                      : <Pill size={36} color="var(--primary)"/>
                     }
                     {med.requires_prescription && (
                       <span className="ph-rx-badge">Rx Required</span>
@@ -161,12 +161,14 @@ export default function PharmacyPage() {
                 <p className="ph-cart-title">
                   <ShoppingBag size={18}/> Your Cart ({cart.reduce((s,i)=>s+i.qty,0)} items)
                 </p>
-                <button className="ph-cart-close" onClick={() => setCartOpen(false)}>✕</button>
+                <button className="ph-cart-close" onClick={() => setCartOpen(false)}>
+                  <X size={18}/>
+                </button>
               </div>
 
               {cart.length === 0 ? (
                 <div className="pd-empty">
-                  <p style={{fontSize:40}}>🛒</p>
+                  <ShoppingCart size={48}/>
                   <p>Your cart is empty</p>
                 </div>
               ) : (
@@ -227,7 +229,7 @@ export default function PharmacyPage() {
                       <span className="ph-total-amt">Rs. {Number(total).toLocaleString()}</span>
                     </div>
                     <button className="ba-submit" onClick={placeOrder} disabled={ordering}>
-                      {ordering ? <span className="auth-spinner"/> : '🛒 Place Order'}
+                      {ordering ? <span className="auth-spinner"/> : <><ShoppingCart size={16}/> Place Order</>}
                     </button>
                   </div>
                 </>

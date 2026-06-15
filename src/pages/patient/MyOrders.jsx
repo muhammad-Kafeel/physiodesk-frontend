@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { ShoppingBag, Package, MapPin, Phone, ChevronDown, ChevronUp } from "lucide-react";
+import { ShoppingBag, Package, MapPin, Phone, ChevronDown, ChevronUp, CreditCard, CheckCircle } from "lucide-react";
 import Layout from "../../components/layout/Layout";
 import { pharmacyAPI } from "../../api/services";
 import { toast } from "react-toastify";
@@ -128,14 +128,14 @@ export default function MyOrders() {
                         )}
                         {order.payment_method && (
                           <span style={{display:"flex",alignItems:"center",gap:5}}>
-                            💳 {order.payment_method.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
+                            <CreditCard size={13} color="var(--primary)"/> {order.payment_method.replace(/_/g," ").replace(/\b\w/g,c=>c.toUpperCase())}
                           </span>
                         )}
                       </div>
 
                       {order.status === "delivered" && (
-                        <p style={{fontSize:13,color:"#16A34A",fontWeight:700,marginTop:10}}>
-                          ✅ Delivered successfully
+                        <p style={{fontSize:13,color:"#16A34A",fontWeight:700,marginTop:10,display:"flex",alignItems:"center",gap:5}}>
+                          <CheckCircle size={14}/> Delivered successfully
                         </p>
                       )}
                     </div>

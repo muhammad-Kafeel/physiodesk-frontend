@@ -1,5 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '../context/AuthContext';
+import { useAuth, usePatientAuth, useDoctorAuth, useAdminAuth } from '../context/AuthContext';
 
 // ── Auth pages ─────────────────────────────────────────────────────────────
 import PatientLoginPage    from '../pages/auth/PatientLoginPage';
@@ -8,6 +8,9 @@ import AdminLoginPage      from '../pages/auth/AdminLoginPage';
 import RegisterChoicePage  from '../pages/auth/RegisterChoicePage';
 import PatientRegisterPage from '../pages/auth/PatientRegisterPage';
 import DoctorRegisterPage  from '../pages/auth/DoctorRegisterPage';
+import ForgotPasswordPage  from '../pages/auth/ForgotPasswordPage';
+import ResetPasswordPage   from '../pages/auth/ResetPasswordPage';
+import EmailVerifiedPage   from '../pages/auth/EmailVerifiedPage';
 
 // ── Public pages ────────────────────────────────────────────────────────────
 import LandingPage   from '../pages/LandingPage';
@@ -46,8 +49,9 @@ import ManageOrders     from '../pages/admin/ManageOrders';
 import ManageComplaints from '../pages/admin/ManageComplaints';
 import Transactions     from '../pages/admin/Transactions';
 
-// ── Video call ──────────────────────────────────────────────────────────────
-import VideoCallPage from '../pages/VideoCallPage';
+// ── Video call + Payment result ─────────────────────────────────────────────
+import VideoCallPage    from '../pages/VideoCallPage';
+import PaymentResultPage from '../pages/PaymentResultPage';
 
 // ═══════════════════════════════════════════════════════════════════════════════
 //  Route guards
@@ -58,70 +62,71 @@ function Spinner() {
 }
 
 /**
- * GuestRoute  —  blocks access if the user is already authenticated.
- * Redirects them to their own portal's dashboard, not a generic home.
- * `portal` prop restricts which logged-in role gets redirected away.
- * e.g. a logged-in PATIENT visiting /doctor/login should NOT be redirected.
+ * GuestRoute — blocks access if the user is already logged into THIS portal.
+ *
+ * With the new auth system, useAuth() (= usePortalAuth()) automatically
+ * returns the correct portal's session based on the current URL.  No portal
+ * prop is needed — a logged-in doctor visiting /patient/login gets the patient
+ * session (which is empty) and sees the login form, exactly as intended.
  */
-function GuestRoute({ children, portal = null }) {
+function GuestRoute({ children }) {
   const { user, loading } = useAuth();
   if (loading) return <Spinner />;
-
   if (user) {
-    // If a portal restriction is set, only redirect the matching role
-    if (portal && user.role !== portal) return children;
-    // Redirect to the correct dashboard
     if (user.role === 'admin')  return <Navigate to="/admin/dashboard"   replace />;
     if (user.role === 'doctor') return <Navigate to="/doctor/dashboard"  replace />;
     return <Navigate to="/patient/dashboard" replace />;
   }
-
   return children;
 }
 
 /**
- * PatientRoute  —  requires auth AND role=patient.
- * A doctor's token gets a 403 from the API anyway, but we also block the UI.
+ * PatientRoute — requires a valid patient session.
+ * Reads from the PATIENT session only (usePatientAuth).
+ * A doctor logged in on /doctor/* has NO session here → redirected to patient login.
  */
 function PatientRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading } = usePatientAuth();
   if (loading) return <Spinner />;
-  if (!user)               return <Navigate to="/patient/login"  replace />;
-  if (user.role !== 'patient') return <Navigate to="/unauthorized" replace />;
+  if (!user)                   return <Navigate to="/patient/login"  replace />;
+  if (user.role !== 'patient') return <Navigate to="/unauthorized"   replace />;
   return children;
 }
 
 /**
- * DoctorRoute  —  requires auth AND role=doctor.
+ * DoctorRoute — requires a valid doctor session.
+ * Reads from the DOCTOR session only (useDoctorAuth).
+ * A patient logged in on /patient/* has NO session here → redirected to doctor login.
  */
 function DoctorRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useDoctorAuth();
   if (loading) return <Spinner />;
-  if (!user)              return <Navigate to="/doctor/login"   replace />;
-  if (user.role !== 'doctor') return <Navigate to="/unauthorized" replace />;
+  if (!user)                  return <Navigate to="/doctor/login"  replace />;
+  if (user.role !== 'doctor') return <Navigate to="/unauthorized"  replace />;
   return children;
 }
 
 /**
- * AdminRoute  —  requires auth AND role=admin.
+ * AdminRoute — requires a valid admin session.
  */
 function AdminRoute({ children }) {
-  const { user, loading } = useAuth();
+  const { user, loading } = useAdminAuth();
   if (loading) return <Spinner />;
-  if (!user)             return <Navigate to="/admin/login"    replace />;
+  if (!user)                 return <Navigate to="/admin/login"  replace />;
   if (user.role !== 'admin') return <Navigate to="/unauthorized" replace />;
   return children;
 }
 
 /**
- * AnyAuthRoute  —  requires login (any valid role).
- * Used for routes like video calls that both doctor and patient access.
- * Redirects unauthenticated users to the patient login (most common entry).
+ * AnyAuthRoute — requires a valid session in EITHER patient OR doctor portal.
+ * Used for shared routes like video calls.
  */
 function AnyAuthRoute({ children }) {
-  const { user, loading } = useAuth();
-  if (loading) return <Spinner />;
-  if (!user) return <Navigate to="/patient/login" replace />;
+  const { user: pUser, loading: pLoading } = usePatientAuth();
+  const { user: dUser, loading: dLoading } = useDoctorAuth();
+
+  if (pLoading || dLoading) return <Spinner />;
+  if (!pUser && !dUser)     return <Navigate to="/patient/login" replace />;
   return children;
 }
 
@@ -141,35 +146,46 @@ export default function AppRouter() {
       <Route path="/blogs/:slug"  element={<BlogDetail />} />
       <Route path="/unauthorized" element={<Unauthorized />} />
 
-      {/* ── Legacy /login redirect → patient login ─────────────────────────
-          Old bookmarks / emails pointing to /login land on the patient portal.
-          Doctors and admins use /doctor/login and /admin/login.
-      ── */}
+      {/* Legacy /login → patient login */}
       <Route path="/login" element={<Navigate to="/patient/login" replace />} />
 
       {/* ── Patient auth ── */}
       <Route path="/patient/login"
-        element={<GuestRoute portal="patient"><PatientLoginPage /></GuestRoute>} />
+        element={<GuestRoute><PatientLoginPage /></GuestRoute>} />
 
       {/* ── Doctor auth ── */}
       <Route path="/doctor/login"
-        element={<GuestRoute portal="doctor"><DoctorLoginPage /></GuestRoute>} />
+        element={<GuestRoute><DoctorLoginPage /></GuestRoute>} />
 
       {/* ── Admin auth (not linked publicly) ── */}
       <Route path="/admin/login"
-        element={<GuestRoute portal="admin"><AdminLoginPage /></GuestRoute>} />
+        element={<GuestRoute><AdminLoginPage /></GuestRoute>} />
 
       {/* ── Registration ── */}
       <Route path="/register"
         element={<GuestRoute><RegisterChoicePage /></GuestRoute>} />
       <Route path="/register/patient"
-        element={<GuestRoute portal="patient"><PatientRegisterPage /></GuestRoute>} />
+        element={<GuestRoute><PatientRegisterPage /></GuestRoute>} />
       <Route path="/register/doctor"
-        element={<GuestRoute portal="doctor"><DoctorRegisterPage /></GuestRoute>} />
+        element={<GuestRoute><DoctorRegisterPage /></GuestRoute>} />
 
-      {/* ── Video call — any authenticated role ── */}
+      {/* ── Password reset (per portal) ── */}
+      <Route path="/patient/forgot-password" element={<GuestRoute><ForgotPasswordPage role="patient" /></GuestRoute>} />
+      <Route path="/doctor/forgot-password"  element={<GuestRoute><ForgotPasswordPage role="doctor" /></GuestRoute>} />
+      <Route path="/admin/forgot-password"   element={<GuestRoute><ForgotPasswordPage role="admin" /></GuestRoute>} />
+      <Route path="/patient/reset-password"  element={<ResetPasswordPage role="patient" />} />
+      <Route path="/doctor/reset-password"   element={<ResetPasswordPage role="doctor" />} />
+      <Route path="/admin/reset-password"    element={<ResetPasswordPage role="admin" />} />
+
+      {/* ── Email verification result ── */}
+      <Route path="/email-verified" element={<EmailVerifiedPage />} />
+
+      {/* ── Video call — patient OR doctor ── */}
       <Route path="/video-call/:appointmentId"
         element={<AnyAuthRoute><VideoCallPage /></AnyAuthRoute>} />
+
+      {/* ── Payment result (JazzCash redirect) ── */}
+      <Route path="/payment/result" element={<PaymentResultPage />} />
 
       {/* ── Patient routes ── */}
       <Route path="/patient/dashboard"       element={<PatientRoute><PatientDashboard /></PatientRoute>} />

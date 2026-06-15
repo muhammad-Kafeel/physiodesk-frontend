@@ -1,137 +1,249 @@
-import { createContext, useContext, useState, useEffect, useCallback } from 'react';
-import { patientAuthAPI, doctorAuthAPI, adminAuthAPI } from '../api/services';
-
 /**
- * AuthContext
+ * AuthContext.jsx — Three completely isolated portal sessions.
  *
- * Storage keys (all namespaced with pd_ prefix):
- *   pd_token   — the bearer token issued at login
- *   pd_user    — serialised user object
- *   pd_portal  — 'patient' | 'doctor' | 'admin'
+ * ARCHITECTURE:
+ *   Each portal has its own localStorage keys, React state, and API calls.
+ *   Logging in as a doctor does NOT affect the patient session at all.
+ *   All three portals can be simultaneously logged in on the same browser
+ *   without any interference.
  *
- * Isolation rules enforced here:
- *   • login() always writes portal alongside token — they travel together.
- *   • logout() clears ALL three keys so no ghost session can linger.
- *   • The /me endpoint called on mount is portal-aware — it hits the correct
- *     role-scoped backend route, so a stale doctor token won't re-hydrate as
- *     a patient session.
- *   • viewMode (doctor-browses-as-patient) is kept but now only lives in
- *     memory — it is never stored in localStorage to avoid confusion with
- *     the portal key.
+ * STORAGE KEYS:
+ *   pd_patient_token / pd_patient_user   ← patient portal only
+ *   pd_doctor_token  / pd_doctor_user    ← doctor portal only
+ *   pd_admin_token   / pd_admin_user     ← admin portal only
+ *
+ * HOOKS EXPORTED:
+ *   usePatientAuth()  — always returns the patient session
+ *   useDoctorAuth()   — always returns the doctor session
+ *   useAdminAuth()    — always returns the admin session
+ *   usePortalAuth()   — smart: auto-selects session from current URL path
+ *   useAuth()         — alias of usePortalAuth() for backward compat
+ *
+ * MIGRATION:
+ *   On first mount, any existing old-format keys (pd_token / pd_user /
+ *   pd_portal) are silently migrated to the new portal-scoped keys and
+ *   then removed, so logged-in users are not forced to re-login.
  */
 
-const AuthContext = createContext(null);
+import { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import { useLocation } from 'react-router-dom';
+import { patientAuthAPI, doctorAuthAPI, adminAuthAPI } from '../api/services';
 
-// Map portal → me() function
-const meByPortal = {
-  patient : () => patientAuthAPI.me(),
-  doctor  : () => doctorAuthAPI.me(),
-  admin   : () => adminAuthAPI.me(),
+// ── Storage key map ───────────────────────────────────────────────────────────
+const STORAGE = {
+  patient: { token: 'pd_patient_token', user: 'pd_patient_user' },
+  doctor:  { token: 'pd_doctor_token',  user: 'pd_doctor_user'  },
+  admin:   { token: 'pd_admin_token',   user: 'pd_admin_user'   },
 };
 
-// Map portal → login page path (used by logout)
-const loginPathByPortal = {
-  patient : '/patient/login',
-  doctor  : '/doctor/login',
-  admin   : '/admin/login',
+// ── Login redirect per portal ─────────────────────────────────────────────────
+const LOGIN_PATH = {
+  patient: '/patient/login',
+  doctor:  '/doctor/login',
+  admin:   '/admin/login',
 };
 
-export const AuthProvider = ({ children }) => {
-  const [user,    setUser]    = useState(() => {
-    try { return JSON.parse(localStorage.getItem('pd_user') || 'null'); }
+// ── Separate React contexts — one per portal ──────────────────────────────────
+const PatientAuthContext = createContext(null);
+const DoctorAuthContext  = createContext(null);
+const AdminAuthContext   = createContext(null);
+
+// ── One-time migration from old single-slot storage ───────────────────────────
+// Users logged in before this update had:  pd_token / pd_user / pd_portal
+// We silently lift their session into the correct new-format key so they
+// don't have to re-login, then remove the old keys permanently.
+function migrateOldStorage() {
+  const oldToken  = localStorage.getItem('pd_token');
+  const oldUser   = localStorage.getItem('pd_user');
+  const oldPortal = localStorage.getItem('pd_portal');
+
+  if (oldToken && oldPortal && STORAGE[oldPortal]) {
+    const { token: newTokenKey, user: newUserKey } = STORAGE[oldPortal];
+    // Only migrate if the destination doesn't already exist (avoid clobber)
+    if (!localStorage.getItem(newTokenKey)) {
+      localStorage.setItem(newTokenKey, oldToken);
+      if (oldUser) localStorage.setItem(newUserKey, oldUser);
+    }
+  }
+
+  // Remove old keys regardless — they must never come back
+  localStorage.removeItem('pd_token');
+  localStorage.removeItem('pd_user');
+  localStorage.removeItem('pd_portal');
+  localStorage.removeItem('pd_view_mode');
+}
+
+// ── Portal session factory ────────────────────────────────────────────────────
+// Builds one independent session slice (state + actions) for a given portal.
+// Called three times inside AuthProvider — once per portal.
+function usePortalSession(portal, meApiFn, logoutApiFn) {
+  const keys = STORAGE[portal];
+
+  const [user, setUser] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(keys.user) || 'null'); }
     catch { return null; }
   });
-  const [token,   setToken]   = useState(() => localStorage.getItem('pd_token') || null);
-  const [portal,  setPortal]  = useState(() => localStorage.getItem('pd_portal') || null);
+  const [token, setToken] = useState(() => localStorage.getItem(keys.token) || null);
   const [loading, setLoading] = useState(true);
 
-  // On mount, verify the stored token is still valid using the correct portal endpoint
+  // On mount: verify the stored token against the portal's own /me endpoint.
+  // A doctor token sent to patientAuthAPI.me() will fail (403) and clear only
+  // the patient session — the doctor session is untouched.
   useEffect(() => {
+    let cancelled = false;
     const verify = async () => {
-      if (!token || !portal) { setLoading(false); return; }
-
-      const meFn = meByPortal[portal];
-      if (!meFn) { logout(); return; }   // unknown portal value — clear everything
-
+      if (!token) { setLoading(false); return; }
       try {
-        const res = await meFn();
-        const freshUser = res.data.data;
-        setUser(freshUser);
-        localStorage.setItem('pd_user', JSON.stringify(freshUser));
+        const res = await meApiFn();
+        if (cancelled) return;
+        const fresh = res.data.data;
+        setUser(fresh);
+        localStorage.setItem(keys.user, JSON.stringify(fresh));
       } catch {
-        // Token invalid / expired — clear silently; axios interceptor handles redirect
-        _clearSession();
+        // Token invalid or expired — clear only this portal's session
+        if (!cancelled) _clear();
       } finally {
-        setLoading(false);
+        if (!cancelled) setLoading(false);
       }
     };
     verify();
+    return () => { cancelled = true; };
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // ── login ─────────────────────────────────────────────────────────────────
-  /**
-   * Called by each login page after a successful API response.
-   * @param {object} userData  - user object from the API
-   * @param {string} authToken - bearer token from the API
-   * @param {string} portalName - 'patient' | 'doctor' | 'admin'
-   */
-  const login = useCallback((userData, authToken, portalName) => {
-    setUser(userData);
-    setToken(authToken);
-    setPortal(portalName);
-    localStorage.setItem('pd_user',   JSON.stringify(userData));
-    localStorage.setItem('pd_token',  authToken);
-    localStorage.setItem('pd_portal', portalName);
-    localStorage.removeItem('pd_view_mode');
-  }, []);
-
-  // ── logout ────────────────────────────────────────────────────────────────
-  const logout = useCallback(async (redirectOverride = null) => {
-    const currentPortal = portal || localStorage.getItem('pd_portal');
-
-    // Call the correct logout endpoint (best-effort — ignore errors)
-    try {
-      if (currentPortal === 'patient') await patientAuthAPI.logout();
-      else if (currentPortal === 'doctor') await doctorAuthAPI.logout();
-      else if (currentPortal === 'admin')  await adminAuthAPI.logout();
-    } catch {}
-
-    _clearSession();
-    // Redirect to the portal-specific login page
-    const dest = redirectOverride ?? loginPathByPortal[currentPortal] ?? '/patient/login';
-    window.location.href = dest;
-  }, [portal]);
-
-  // ── internal session clear ────────────────────────────────────────────────
-  const _clearSession = () => {
+  // ── Internal clear ──────────────────────────────────────────────────────────
+  // Removes only this portal's data from state + storage.
+  // The other two portals' keys are never touched.
+  const _clear = useCallback(() => {
     setUser(null);
     setToken(null);
-    setPortal(null);
-    localStorage.removeItem('pd_user');
-    localStorage.removeItem('pd_token');
-    localStorage.removeItem('pd_portal');
-    localStorage.removeItem('pd_view_mode');
-  };
+    localStorage.removeItem(keys.token);
+    localStorage.removeItem(keys.user);
+  }, [keys]);
 
-  // ── helpers ───────────────────────────────────────────────────────────────
-  const isAdmin   = () => user?.role === 'admin';
-  const isDoctor  = () => user?.role === 'doctor';
-  const isPatient = () => user?.role === 'patient';
+  // ── login(userData, authToken) ──────────────────────────────────────────────
+  // Called by login / register pages after a successful API response.
+  // The old code passed a third argument (portalName) that is now intentionally
+  // ignored — the portal is implicit in which context's login() is called.
+  const login = useCallback((userData, authToken) => {
+    setUser(userData);
+    setToken(authToken);
+    localStorage.setItem(keys.token, authToken);
+    localStorage.setItem(keys.user, JSON.stringify(userData));
+  }, [keys]);
+
+  // ── logout() ────────────────────────────────────────────────────────────────
+  // Calls the portal's own logout API, clears only this portal's storage,
+  // then redirects to this portal's login page.
+  const logout = useCallback(async (redirectOverride = null) => {
+    try { await logoutApiFn(); } catch { /* best-effort — ignore network errors */ }
+    _clear();
+    window.location.href = redirectOverride ?? LOGIN_PATH[portal];
+  }, [portal, logoutApiFn, _clear]);
+
+  return { user, token, loading, login, logout };
+}
+
+// ── AuthProvider ──────────────────────────────────────────────────────────────
+export function AuthProvider({ children }) {
+  // Migrate old shared-session keys on first render (runs once)
+  useEffect(() => { migrateOldStorage(); }, []);
+
+  // Three completely independent sessions running in parallel
+  const patient = usePortalSession('patient', patientAuthAPI.me, patientAuthAPI.logout);
+  const doctor  = usePortalSession('doctor',  doctorAuthAPI.me,  doctorAuthAPI.logout);
+  const admin   = usePortalSession('admin',   adminAuthAPI.me,   adminAuthAPI.logout);
 
   return (
-    <AuthContext.Provider value={{
-      user, token, portal, loading,
-      login, logout,
-      isAdmin, isDoctor, isPatient,
-    }}>
-      {children}
-    </AuthContext.Provider>
+    <PatientAuthContext.Provider value={patient}>
+      <DoctorAuthContext.Provider value={doctor}>
+        <AdminAuthContext.Provider value={admin}>
+          {children}
+        </AdminAuthContext.Provider>
+      </DoctorAuthContext.Provider>
+    </PatientAuthContext.Provider>
   );
-};
+}
 
-export const useAuth = () => {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error('useAuth must be used inside AuthProvider');
+// ── Portal-specific hooks ─────────────────────────────────────────────────────
+
+/**
+ * usePatientAuth() — ALWAYS returns the patient session, regardless of URL.
+ * Use in: PatientLoginPage, PatientRegisterPage, PatientRoute guard.
+ */
+export const usePatientAuth = () => {
+  const ctx = useContext(PatientAuthContext);
+  if (!ctx) throw new Error('usePatientAuth must be used inside <AuthProvider>');
   return ctx;
 };
+
+/**
+ * useDoctorAuth() — ALWAYS returns the doctor session, regardless of URL.
+ * Use in: DoctorLoginPage, DoctorRegisterPage, DoctorRoute guard.
+ */
+export const useDoctorAuth = () => {
+  const ctx = useContext(DoctorAuthContext);
+  if (!ctx) throw new Error('useDoctorAuth must be used inside <AuthProvider>');
+  return ctx;
+};
+
+/**
+ * useAdminAuth() — ALWAYS returns the admin session, regardless of URL.
+ * Use in: AdminLoginPage, AdminRoute guard.
+ */
+export const useAdminAuth = () => {
+  const ctx = useContext(AdminAuthContext);
+  if (!ctx) throw new Error('useAdminAuth must be used inside <AuthProvider>');
+  return ctx;
+};
+
+// ── Smart hook: session auto-selected from current URL ────────────────────────
+/**
+ * usePortalAuth()
+ *
+ * Returns the session for whichever portal the user is currently browsing:
+ *   /admin/*    →  admin session
+ *   /doctor/*   →  doctor session
+ *   anything else → patient session
+ *
+ * Also exposes:
+ *   portal    — 'patient' | 'doctor' | 'admin'
+ *   isAdmin   — () => boolean
+ *   isDoctor  — () => boolean
+ *   isPatient — () => boolean
+ *
+ * Used by layout components (Sidebar, Navbar) that must reflect the active
+ * portal's user info and logout function automatically.
+ *
+ * CRITICAL ISOLATION: a doctor logged in on /doctor/* has ZERO effect on
+ * the patient session returned on /patient/* routes, and vice versa.
+ */
+export const usePortalAuth = () => {
+  const location = useLocation();
+  const patient  = usePatientAuth();
+  const doctor   = useDoctorAuth();
+  const admin    = useAdminAuth();
+
+  const portal =
+    location.pathname.startsWith('/admin')  ? 'admin'  :
+    location.pathname.startsWith('/doctor') ? 'doctor' :
+    'patient';
+
+  const session =
+    portal === 'admin'  ? admin  :
+    portal === 'doctor' ? doctor :
+    patient;
+
+  return {
+    ...session,
+    portal,
+    isAdmin:   () => portal === 'admin',
+    isDoctor:  () => portal === 'doctor',
+    isPatient: () => portal === 'patient',
+  };
+};
+
+// ── useAuth() — backward-compat alias ────────────────────────────────────────
+// All components that previously used useAuth() continue working unchanged.
+// They now transparently get the portal-scoped session from usePortalAuth().
+export const useAuth = usePortalAuth;

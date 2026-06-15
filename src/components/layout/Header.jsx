@@ -1,10 +1,26 @@
 import { useState, useRef, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Search, MapPin, ChevronDown, Menu, X, User, LogOut, LayoutDashboard, ShoppingBag, Calendar, FileText } from 'lucide-react';
+import {
+  Search, MapPin, ChevronDown, Menu, X,
+  User, LogOut, LayoutDashboard, ShoppingBag,
+  Calendar, FileText, Stethoscope, HeartPulse
+} from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
 import './Header.css';
 
 const CITIES = ['Lahore','Karachi','Islamabad','Rawalpindi','Multan','Peshawar','Faisalabad','Quetta'];
+
+/* ── Reusable Logo Mark ───────────────────────────────────────────── */
+export function LogoMark({ size = 38 }) {
+  return (
+    <div className="pd-logo-mark" style={{ width: size, height: size }}>
+      <svg width={size * 0.55} height={size * 0.55} viewBox="0 0 22 22" fill="none">
+        <rect x="9.5" y="2" width="3" height="18" rx="1.5" fill="white"/>
+        <rect x="2"   y="9.5" width="18" height="3" rx="1.5" fill="white"/>
+      </svg>
+    </div>
+  );
+}
 
 export default function Header() {
   const [query,      setQuery]      = useState('');
@@ -17,15 +33,7 @@ export default function Header() {
   const userRef  = useRef(null);
   const navigate = useNavigate();
 
-  const {
-    user, logout,
-    isPatient, isDoctor, isAdmin,
-  } = useAuth();
-
-  // Mode-switching removed in new portal-isolated auth model
-  const isInPatientMode    = () => false;
-  const switchToPatientMode = () => {};
-  const switchToDoctorMode  = () => {};
+  const { user, logout, isPatient, isDoctor, isAdmin } = useAuth();
 
   useEffect(() => {
     const handler = (e) => {
@@ -41,13 +49,11 @@ export default function Header() {
     if (query.trim()) navigate(`/doctors?q=${encodeURIComponent(query)}`);
   };
 
-  const handleLogout = async () => {
-    await logout(); // AuthContext.logout() handles redirect internally
-  };
+  const handleLogout = async () => { await logout(); };
 
   const getDashboardLink = () => {
     if (isAdmin())  return '/admin/dashboard';
-    if (isDoctor()) return isInPatientMode() ? '/patient/dashboard' : '/doctor/dashboard';
+    if (isDoctor()) return '/doctor/dashboard';
     return '/patient/dashboard';
   };
 
@@ -63,7 +69,7 @@ export default function Header() {
 
             {/* Logo */}
             <Link to="/" className="pd-logo">
-              <div className="pd-logo-icon">P</div>
+              <LogoMark size={38} />
               <div>
                 <span className="pd-logo-text">PhysioDesk</span>
                 <span className="pd-logo-tagline">Virtual Clinic</span>
@@ -79,11 +85,8 @@ export default function Header() {
                 {cityOpen && (
                   <ul className="pd-city-drop">
                     {CITIES.map(c => (
-                      <li
-                        key={c}
-                        className={c === city ? 'active' : ''}
-                        onClick={(e) => { e.stopPropagation(); setCity(c); setCityOpen(false); }}
-                      >
+                      <li key={c} className={c === city ? 'active' : ''}
+                        onClick={(e) => { e.stopPropagation(); setCity(c); setCityOpen(false); }}>
                         {c}
                       </li>
                     ))}
@@ -96,7 +99,7 @@ export default function Header() {
                 <input
                   value={query}
                   onChange={e => setQuery(e.target.value)}
-                  placeholder="Search Doctors, Specialties, Symptoms..."
+                  placeholder="Search Doctors, Specialties, Conditions..."
                   className="pd-search-input"
                 />
                 <button type="submit" className="pd-search-btn">Search</button>
@@ -107,29 +110,7 @@ export default function Header() {
             <div className="pd-header-actions">
               {user ? (
                 <div className="pd-actions-logged-in">
-
-                  {/* ── Mode switcher (doctors only) ── */}
-                  {isDoctor() && (
-                    isInPatientMode() ? (
-                      <button
-                        className="pd-mode-btn pd-mode-btn-doctor"
-                        title="Switch back to Doctor Mode"
-                        onClick={() => { switchToDoctorMode(); navigate('/doctor/dashboard'); }}
-                      >
-                        👨‍⚕️ Doctor Mode
-                      </button>
-                    ) : (
-                      <button
-                        className="pd-mode-btn pd-mode-btn-patient"
-                        title="Switch to Patient Mode to book appointments"
-                        onClick={() => { switchToPatientMode(); navigate('/patient/dashboard'); }}
-                      >
-                        🩺 Book as Patient
-                      </button>
-                    )
-                  )}
-
-                  {/* ── User dropdown ── */}
+                  {/* User dropdown */}
                   <div className="pd-user-menu" ref={userRef}>
                     <button className="pd-user-btn" onClick={() => setUserMenu(p => !p)}>
                       <div className="pd-avatar">{initials}</div>
@@ -143,16 +124,14 @@ export default function Header() {
                           <div className="pd-avatar pd-avatar-lg">{initials}</div>
                           <div>
                             <p className="pd-user-drop-name">{user.name}</p>
-                            <p className="pd-user-drop-role">
-                              {isDoctor() && isInPatientMode() ? 'Doctor (Patient Mode)' : user.role}
-                            </p>
+                            <p className="pd-user-drop-role">{user.role}</p>
                           </div>
                         </div>
                         <hr />
                         <Link to={getDashboardLink()} className="pd-drop-item" onClick={() => setUserMenu(false)}>
                           <LayoutDashboard size={15} /> Dashboard
                         </Link>
-                        {(isPatient() || isInPatientMode()) && (
+                        {isPatient() && (
                           <>
                             <Link to="/patient/appointments" className="pd-drop-item" onClick={() => setUserMenu(false)}>
                               <Calendar size={15} /> My Appointments
@@ -167,7 +146,7 @@ export default function Header() {
                         )}
                         <hr />
                         <button className="pd-drop-item pd-drop-logout" onClick={handleLogout}>
-                          <LogOut size={15} /> Logout
+                          <LogOut size={15} /> Sign out
                         </button>
                       </div>
                     )}
@@ -176,7 +155,7 @@ export default function Header() {
               ) : (
                 <>
                   <Link to="/register/doctor" className="pd-join-btn">Join as Doctor</Link>
-                  <Link to="/patient/login" className="pd-login-btn">Login</Link>
+                  <Link to="/patient/login" className="pd-login-btn">Sign In</Link>
                 </>
               )}
 
@@ -209,12 +188,9 @@ export default function Header() {
                 ],
               },
             ].map(nav => (
-              <div
-                key={nav.key}
-                className="pd-nav-item"
+              <div key={nav.key} className="pd-nav-item"
                 onMouseEnter={() => setDropdown(nav.key)}
-                onMouseLeave={() => setDropdown(null)}
-              >
+                onMouseLeave={() => setDropdown(null)}>
                 <span className="pd-nav-link">
                   {nav.label} <ChevronDown size={11} />
                 </span>
@@ -227,10 +203,9 @@ export default function Header() {
                 )}
               </div>
             ))}
-
             <Link to="/blogs" className="pd-nav-link-plain">Health Blogs</Link>
             <Link to="/blogs?type=success_story" className="pd-nav-link-plain">Success Stories</Link>
-            {user && (isPatient() || isInPatientMode()) && (
+            {user && isPatient() && (
               <Link to="/patient/complaints" className="pd-nav-link-plain">Complaints</Link>
             )}
           </div>
@@ -246,34 +221,17 @@ export default function Header() {
               ['/blogs', 'Health Blogs'],
               ...(user
                 ? [[getDashboardLink(), 'Dashboard']]
-                : [['/patient/login', 'Login'], ['/register', 'Register']]
+                : [['/patient/login', 'Sign In'], ['/register', 'Register']]
               ),
             ].map(([to, label]) => (
-              <Link
-                key={to + label}
-                to={to}
-                className="pd-mobile-link"
-                onClick={() => setMobileOpen(false)}
-              >
+              <Link key={to + label} to={to} className="pd-mobile-link"
+                onClick={() => setMobileOpen(false)}>
                 {label}
               </Link>
             ))}
-            {user && isDoctor() && (
-              <button
-                className="pd-mobile-link"
-                style={{ color: isInPatientMode() ? '#0F766E' : '#1D4ED8' }}
-                onClick={() => {
-                  isInPatientMode() ? switchToDoctorMode() : switchToPatientMode();
-                  navigate(isInPatientMode() ? '/doctor/dashboard' : '/patient/dashboard');
-                  setMobileOpen(false);
-                }}
-              >
-                {isInPatientMode() ? '👨‍⚕️ Switch to Doctor Mode' : '🩺 Book as Patient'}
-              </button>
-            )}
             {user && (
               <button className="pd-mobile-link pd-mobile-logout" onClick={handleLogout}>
-                Logout
+                Sign out
               </button>
             )}
           </div>

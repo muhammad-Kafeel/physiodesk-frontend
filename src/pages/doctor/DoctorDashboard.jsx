@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import {
-  Calendar, CheckCircle, Clock, Users,
-  ChevronRight, Video, UserCheck, FileText, BookOpen, HeartPulse
+  Calendar, CheckCircle, Clock, DollarSign,
+  ChevronRight, Video, UserCheck, FileText, BookOpen,
+  AlertTriangle, Info, Activity
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { doctorAPI } from '../../api/services';
@@ -11,14 +12,14 @@ import { toast } from 'react-toastify';
 import './DoctorDashboard.css';
 
 const STATUS_STYLE = {
-  pending:   { bg: '#FEF9C3', color: '#CA8A04' },
-  confirmed: { bg: '#DCFCE7', color: '#16A34A' },
-  completed: { bg: '#DBEAFE', color: '#2563EB' },
-  cancelled: { bg: '#FEE2E2', color: '#DC2626' },
+  pending:   { bg: 'var(--warning-light)', color: 'var(--warning)' },
+  confirmed: { bg: 'var(--success-light)', color: 'var(--success)' },
+  completed: { bg: 'var(--info-light)',    color: 'var(--info)'    },
+  cancelled: { bg: 'var(--danger-light)', color: 'var(--danger)'  },
 };
 
 export default function DoctorDashboard() {
-  const { user, switchToPatientMode } = useAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [appts,   setAppts]   = useState([]);
   const [profile, setProfile] = useState(null);
@@ -34,11 +35,13 @@ export default function DoctorDashboard() {
     }).finally(() => setLoading(false));
   }, []);
 
-  const today     = new Date().toISOString().split('T')[0];
-  const upcoming  = appts.filter(a => ['pending','confirmed'].includes(a.status) && a.appointment_date >= today);
-  const todayAppts= appts.filter(a => a.appointment_date === today);
-  const completed = appts.filter(a => a.status === 'completed').length;
-  const pending   = appts.filter(a => a.status === 'pending').length;
+  const today      = new Date().toISOString().split('T')[0];
+  const hour       = new Date().getHours();
+  const greeting   = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+  const upcoming   = appts.filter(a => ['pending','confirmed'].includes(a.status) && a.appointment_date >= today);
+  const todayAppts = appts.filter(a => a.appointment_date === today);
+  const completed  = appts.filter(a => a.status === 'completed').length;
+  const pending    = appts.filter(a => a.status === 'pending').length;
 
   const totalEarnings = appts
     .filter(a => a.status === 'completed' && a.is_paid)
@@ -52,8 +55,7 @@ export default function DoctorDashboard() {
         <div className="dd-banner">
           <div>
             <h1 className="dd-welcome">
-              Good {new Date().getHours() < 12 ? 'Morning' : new Date().getHours() < 17 ? 'Afternoon' : 'Evening'},
-              Dr. {user?.name?.split(' ')[0]}! 👨‍⚕️
+              {greeting}, Dr. {user?.name?.split(' ')[0]}
             </h1>
             <p className="dd-sub">
               {profile?.is_verified
@@ -69,16 +71,16 @@ export default function DoctorDashboard() {
         {/* Profile incomplete warning */}
         {!profile && (
           <div className="dd-alert">
-            <span>⚠️</span>
+            <AlertTriangle size={16} />
             <span>Complete your doctor profile to start receiving appointments.</span>
-            <Link to="/doctor/profile" className="dd-alert-link">Set up profile →</Link>
+            <Link to="/doctor/profile" className="dd-alert-link">Set up profile</Link>
           </div>
         )}
 
         {/* Verification pending warning */}
         {profile && !profile.is_verified && (
           <div className="dd-alert dd-alert-info">
-            <span>🕐</span>
+            <Info size={16} />
             <span>Your profile is under review. Admin will verify it shortly.</span>
           </div>
         )}
@@ -86,10 +88,10 @@ export default function DoctorDashboard() {
         {/* Stats */}
         <div className="dd-stats">
           {[
-            { label: 'Total Appointments', value: appts.length,    icon: <Calendar size={20}/>,   bg: '#EFF6FF', color: 'var(--primary)' },
-            { label: 'Completed',          value: completed,        icon: <CheckCircle size={20}/>,bg: '#DCFCE7', color: '#16A34A' },
-            { label: 'Pending Confirm',    value: pending,          icon: <Clock size={20}/>,      bg: '#FEF9C3', color: '#CA8A04' },
-            { label: 'Total Earnings',     value: `Rs. ${totalEarnings.toLocaleString()}`, icon: <Users size={20}/>, bg: '#F0FDF4', color: '#16A34A' },
+            { label: 'Total Appointments', value: appts.length,    icon: <Calendar size={20}/>,    bg: 'var(--primary-light)', color: 'var(--primary)' },
+            { label: 'Completed',          value: completed,        icon: <CheckCircle size={20}/>, bg: 'var(--success-light)', color: 'var(--success)' },
+            { label: 'Pending Confirm',    value: pending,          icon: <Clock size={20}/>,       bg: 'var(--warning-light)', color: 'var(--warning)' },
+            { label: 'Total Earnings',     value: `Rs. ${totalEarnings.toLocaleString()}`, icon: <Activity size={20}/>, bg: 'var(--teal-light)', color: 'var(--teal)' },
           ].map((s, i) => (
             <div key={i} className="dd-stat-card">
               <div className="dd-stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
@@ -112,8 +114,8 @@ export default function DoctorDashboard() {
             {loading ? <div className="pd-spinner" /> :
               todayAppts.length === 0 ? (
                 <div className="pd-empty">
-                  <p style={{ fontSize: 36 }}>📅</p>
-                  <p>No appointments today</p>
+                  <Calendar size={40}/>
+                  <p style={{ marginTop: 10 }}>No appointments today</p>
                 </div>
               ) : (
                 <div className="dd-appt-list">
@@ -126,7 +128,7 @@ export default function DoctorDashboard() {
                         <div className="dd-appt-info">
                           <p className="dd-appt-name">{pat.name || 'Patient'}</p>
                           <p className="dd-appt-meta">
-                            {a.appointment_time} · {a.type === 'video' ? '📹 Video' : '🏥 In-person'}
+                            {a.appointment_time} &middot; {a.type === 'video' ? 'Video Call' : 'In-person'}
                           </p>
                           {a.symptoms && (
                             <p className="dd-appt-symptoms">{a.symptoms.slice(0, 60)}...</p>
@@ -151,10 +153,10 @@ export default function DoctorDashboard() {
             <p className="pd-section-title" style={{ marginBottom: 16 }}>Quick Actions</p>
             <div className="dd-quick-links">
               {[
-                { to: '/doctor/profile',      icon: <UserCheck size={20}/>, label: 'My Profile',    sub: 'Edit info & time slots', bg: '#EFF6FF', color: 'var(--primary)' },
-                { to: '/doctor/appointments', icon: <Calendar size={20}/>,  label: 'Appointments',  sub: 'Confirm & complete',     bg: '#DCFCE7', color: '#16A34A' },
-                { to: '/doctor/blogs',        icon: <BookOpen size={20}/>,  label: 'Write Blogs',   sub: 'Share health tips',      bg: '#FDF4FF', color: '#7C3AED' },
-                { to: '/blogs',               icon: <FileText size={20}/>,  label: 'View All Blogs',sub: 'Published articles',     bg: '#F0FDFA', color: 'var(--teal)' },
+                { to: '/doctor/profile',      icon: <UserCheck size={20}/>, label: 'My Profile',     sub: 'Edit info & time slots', bg: 'var(--primary-light)', color: 'var(--primary)' },
+                { to: '/doctor/appointments', icon: <Calendar size={20}/>,  label: 'Appointments',   sub: 'Confirm & complete',     bg: 'var(--success-light)', color: 'var(--success)' },
+                { to: '/doctor/blogs',        icon: <BookOpen size={20}/>,  label: 'Write Blogs',    sub: 'Share health tips',      bg: '#F5F3FF',              color: '#7C3AED' },
+                { to: '/blogs',               icon: <FileText size={20}/>,  label: 'View All Blogs', sub: 'Published articles',     bg: 'var(--teal-light)',    color: 'var(--teal)' },
               ].map(item => (
                 <Link key={item.to} to={item.to} className="dd-quick-item">
                   <div className="dd-quick-icon" style={{ background: item.bg, color: item.color }}>{item.icon}</div>
@@ -162,25 +164,9 @@ export default function DoctorDashboard() {
                     <p className="dd-quick-label">{item.label}</p>
                     <p className="dd-quick-sub">{item.sub}</p>
                   </div>
-                  <ChevronRight size={16} color="var(--gray-400)" style={{ marginLeft: 'auto' }} />
+                  <ChevronRight size={16} color="var(--gray-300)" style={{ marginLeft: 'auto' }} />
                 </Link>
               ))}
-
-              {/* Book as Patient — mode switch CTA */}
-              <button
-                className="dd-quick-item"
-                style={{ border: '2px dashed #93C5FD', background: '#EFF6FF', width: '100%', cursor: 'pointer', textAlign: 'left' }}
-                onClick={() => { switchToPatientMode(); navigate('/patient/dashboard'); }}
-              >
-                <div className="dd-quick-icon" style={{ background: '#DBEAFE', color: '#1D4ED8' }}>
-                  <HeartPulse size={20}/>
-                </div>
-                <div>
-                  <p className="dd-quick-label" style={{ color: '#1D4ED8' }}>Book Appointment as Patient</p>
-                  <p className="dd-quick-sub">Switch to patient mode to consult another doctor</p>
-                </div>
-                <ChevronRight size={16} color="#1D4ED8" style={{ marginLeft: 'auto' }} />
-              </button>
             </div>
           </div>
         </div>
@@ -203,8 +189,8 @@ export default function DoctorDashboard() {
                       <p className="dd-appt-name">{pat.name || 'Patient'}</p>
                       <p className="dd-appt-meta">{a.appointment_date} at {a.appointment_time}</p>
                     </div>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 12 }}>
-                      {a.type === 'video' ? <><Video size={13}/> Video</> : '🏥 In-person'}
+                    <span style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 12, color: 'var(--gray-500)' }}>
+                      {a.type === 'video' ? <><Video size={13}/> Video</> : 'In-person'}
                     </span>
                     <span className="dd-status-badge" style={{ background: s.bg, color: s.color }}>
                       {a.status}

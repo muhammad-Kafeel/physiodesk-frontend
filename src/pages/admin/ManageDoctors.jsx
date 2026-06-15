@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { CheckCircle, XCircle, Eye, Search } from 'lucide-react';
+import { CheckCircle, XCircle, Eye, Search, Clock, AlertCircle } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { adminAPI } from '../../api/services';
 import { toast } from 'react-toastify';
@@ -119,12 +119,15 @@ export default function ManageDoctors() {
                       </div>
                     ) : <span style={{fontSize:12,color:'#DC2626'}}>No doctor profile yet</span>}
                     {doc?.rejected_reason && (
-                      <p style={{fontSize:11,color:'#DC2626',marginTop:4}}>❌ Rejected: {doc.rejected_reason}</p>
+                      <p style={{fontSize:11,color:'#DC2626',marginTop:4,display:'flex',alignItems:'center',gap:4}}>
+                        <XCircle size={11}/> Rejected: {doc.rejected_reason}
+                      </p>
                     )}
                   </div>
                   <span style={{fontSize:11,fontWeight:700,padding:'3px 10px',borderRadius:99,
+                    display:'inline-flex',alignItems:'center',gap:4,
                     background:verified?'#DCFCE7':'#FEF9C3',color:verified?'#16A34A':'#CA8A04'}}>
-                    {verified ? '✅ Verified' : '⏳ Pending'}
+                    {verified ? <><CheckCircle size={11}/> Verified</> : <><Clock size={11}/> Pending</>}
                   </span>
                   <div style={{display:'flex',gap:8}}>
                     {doc && (
@@ -162,7 +165,7 @@ export default function ManageDoctors() {
                 <>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
                     <h3 style={{fontWeight:800,fontSize:17}}>Doctor Profile</h3>
-                    <button onClick={()=>setModal(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'var(--gray-400)'}}>✕</button>
+                    <button onClick={()=>setModal(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'var(--gray-400)',display:'flex',alignItems:'center'}}><XCircle size={20}/></button>
                   </div>
                   {[
                     ['Name',            `Dr. ${d.name}`],
@@ -196,7 +199,7 @@ export default function ManageDoctors() {
                 <>
                   <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:20}}>
                     <h3 style={{fontWeight:800,fontSize:17,color:'#DC2626'}}>Reject Doctor</h3>
-                    <button onClick={()=>setModal(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'var(--gray-400)'}}>✕</button>
+                    <button onClick={()=>setModal(null)} style={{background:'none',border:'none',fontSize:20,cursor:'pointer',color:'var(--gray-400)',display:'flex',alignItems:'center'}}><XCircle size={20}/></button>
                   </div>
                   <p style={{fontSize:13,color:'var(--gray-600)',marginBottom:16}}>
                     Rejecting <strong>Dr. {d.name}</strong>. Please provide a reason:

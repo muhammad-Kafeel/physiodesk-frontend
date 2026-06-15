@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useAdminAuth } from '../../context/AuthContext';
 import { adminAuthAPI } from '../../api/services';
 import { toast } from 'react-toastify';
 import './AuthPages.css';
@@ -11,7 +11,7 @@ export default function AdminLoginPage() {
   const [form,    setForm]    = useState({ email: '', password: '' });
   const [show,    setShow]    = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = useAdminAuth();
   const navigate  = useNavigate();
 
   const handle = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -22,7 +22,7 @@ export default function AdminLoginPage() {
     try {
       const { data } = await adminAuthAPI.login(form);
       const { user, token } = data.data;
-      login(user, token, 'admin');
+      login(user, token);   // portal is implicit — this is useAdminAuth
       navigate('/admin/dashboard');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Invalid credentials');
@@ -35,7 +35,12 @@ export default function AdminLoginPage() {
     <div className="ap-page">
       <div className="ap-panel ap-panel--slate">
         <div className="ap-wordmark">
-          <div className="ap-wordmark-icon">P</div>
+          <div className="ap-wordmark-icon">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              <rect x="12" y="3" width="2" height="20" rx="1" fill="white"/>
+              <rect x="3" y="12" width="20" height="2" rx="1" fill="white"/>
+            </svg>
+          </div>
           <span className="ap-wordmark-name">PhysioDesk</span>
         </div>
       </div>
@@ -75,6 +80,9 @@ export default function AdminLoginPage() {
             </button>
           </form>
 
+          <p className="ap-footer-link" style={{ marginTop: 4, textAlign: 'center' }}>
+            <Link to="/admin/forgot-password">Forgot password?</Link>
+          </p>
           <p className="ap-admin-note">
             Authorised personnel only. All actions are logged.
           </p>

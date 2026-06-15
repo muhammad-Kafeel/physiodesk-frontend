@@ -114,7 +114,7 @@ export default function ManageMedicines() {
         {modal !== null && (
           <div style={{position:'fixed',inset:0,background:'rgba(0,0,0,.5)',zIndex:1000,display:'flex',alignItems:'center',justifyContent:'center',padding:16}}>
             <div style={{background:'white',borderRadius:16,padding:28,maxWidth:560,width:'100%',maxHeight:'90vh',overflowY:'auto'}}>
-              <h3 style={{fontWeight:800,fontSize:17,marginBottom:20}}>{modal==='add'?'➕ Add Medicine':'✏️ Edit Medicine'}</h3>
+              <h3 style={{fontWeight:800,fontSize:17,marginBottom:20}}>{modal==='add'?'Add Medicine':'Edit Medicine'}</h3>
               <form onSubmit={save}>
                 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:14,marginBottom:14}}>
                   {[['name','Medicine Name *','text'],['brand','Brand','text'],['category','Category *','text'],['unit','Unit (e.g. tablet, ml)','text'],['price','Price (PKR) *','number'],['quantity','Stock Quantity *','number'],['reorder_level','Reorder Level','number'],['expiry_date','Expiry Date','date']].map(([k,ph,type]) => (

@@ -3,8 +3,6 @@
   display: flex; flex-direction: column;
   height: calc(100vh - 118px); background: #0F172A; overflow: hidden;
 }
-
-/* Top bar */
 .vc-topbar {
   display: flex; align-items: center; gap: 16px;
   padding: 10px 20px; background: #1E293B;
@@ -18,92 +16,45 @@
 .vc-back:hover { color: white; }
 .vc-title-wrap { display: flex; align-items: center; gap: 8px; flex: 1; }
 .vc-dot        { width: 8px; height: 8px; border-radius: 50%; background: #6B7280; }
-.vc-dot-live   { background: #EF4444; animation: pulse 1.5s infinite; }
-@keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
+.vc-dot-live   { background: #EF4444; animation: vc-pulse 1.5s infinite; }
+@keyframes vc-pulse { 0%,100%{opacity:1} 50%{opacity:.4} }
 .vc-title      { font-size: 14px; font-weight: 700; color: white; }
 .vc-appt-info  { display: flex; gap: 14px; font-size: 12px; color: #94A3B8; }
 .vc-appt-info span { display: flex; align-items: center; gap: 4px; }
-
-/* Body */
-.vc-body {
-  flex: 1; overflow: hidden; display: flex;
-  flex-direction: column; min-height: 0;
-}
-
-/* Lobby */
+.vc-body { flex: 1; overflow: hidden; display: flex; flex-direction: column; min-height: 0; }
 .vc-lobby {
   display: flex; align-items: center; justify-content: center;
   flex: 1; padding: 24px; overflow-y: auto;
 }
 .vc-lobby-card {
   background: #1E293B; border: 1px solid #334155;
-  border-radius: 20px; padding: 36px; max-width: 520px; width: 100%;
-  text-align: center;
+  border-radius: 20px; padding: 36px; max-width: 520px; width: 100%; text-align: center;
 }
-
-/* Participants */
-.vc-participants {
-  display: flex; align-items: center; justify-content: center;
-  gap: 24px; margin-bottom: 24px;
-}
-.vc-participant { display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.vc-avatar {
-  width: 64px; height: 64px; border-radius: 50%;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 26px; font-weight: 800; color: white;
-}
+.vc-participants { display: flex; align-items: center; justify-content: center; gap: 24px; margin-bottom: 24px; }
+.vc-participant  { display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.vc-avatar { width: 64px; height: 64px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 26px; font-weight: 800; color: white; }
 .vc-avatar-doc { background: var(--primary); }
 .vc-avatar-pat { background: var(--teal); }
 .vc-part-name  { font-size: 13px; font-weight: 700; color: white; }
 .vc-part-role  { font-size: 11px; color: #94A3B8; }
-.vc-call-icon  {
-  width: 52px; height: 52px; border-radius: 50%;
-  background: linear-gradient(135deg, #16A34A, #0F766E);
-  display: flex; align-items: center; justify-content: center;
-  box-shadow: 0 0 0 8px rgba(22,163,74,.15);
-}
-
+.vc-call-icon  { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #16A34A, #0F766E); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 0 8px rgba(22,163,74,.15); }
 .vc-lobby-title { font-size: 20px; font-weight: 800; color: white; margin-bottom: 8px; }
 .vc-lobby-sub   { font-size: 13px; color: #94A3B8; line-height: 1.7; margin-bottom: 20px; }
-
-/* Early box — appointment not yet started */
-.vc-early-box {
-  background: #1E3A5F; border: 1px solid #2563EB;
-  border-radius: 12px; padding: 20px; margin-bottom: 20px;
-}
+.vc-early-box { background: #1E3A5F; border: 1px solid #2563EB; border-radius: 12px; padding: 20px; margin-bottom: 20px; }
 .vc-early-title { font-size: 11px; font-weight: 700; color: #60A5FA; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; }
 .vc-early-time  { font-size: 20px; font-weight: 800; color: white; margin-bottom: 8px; }
 .vc-early-sub   { font-size: 13px; color: #93C5FD; line-height: 1.6; }
 .vc-countdown   { display: inline-block; margin-top: 6px; font-size: 13px; font-weight: 700; color: #FBBF24; }
-
-/* Late box — appointment window expired */
-.vc-late-box {
-  background: #3B1F1F; border: 1px solid #DC2626;
-  border-radius: 12px; padding: 16px; margin-bottom: 20px;
-  font-size: 13px; color: #FCA5A5; line-height: 1.6;
-}
-
-/* Room info */
-.vc-room-info {
-  background: #0F172A; border: 1px solid #334155;
-  border-radius: 10px; padding: 14px; margin-bottom: 16px; text-align: left;
-}
-.vc-room-row {
-  display: flex; justify-content: space-between; align-items: center;
-  padding: 6px 0; border-bottom: 1px solid #1E293B; font-size: 13px;
-}
+.vc-late-box { background: #3B1F1F; border: 1px solid #DC2626; border-radius: 12px; padding: 16px; margin-bottom: 20px; font-size: 13px; color: #FCA5A5; line-height: 1.6; }
+.vc-room-info { background: #0F172A; border: 1px solid #334155; border-radius: 10px; padding: 14px; margin-bottom: 16px; text-align: left; }
+.vc-room-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; border-bottom: 1px solid #1E293B; font-size: 13px; }
 .vc-room-row:last-child { border-bottom: none; }
 .vc-room-row span:first-child { color: #64748B; font-weight: 600; }
 .vc-room-row span:last-child  { color: #CBD5E1; }
-.vc-room-row code { color: #34D399; font-size: 11px; font-family: monospace; word-break: break-all; }
-
-/* Tips */
 .vc-tips { background: #0F172A; border-radius: 10px; padding: 14px; margin-bottom: 20px; text-align: left; }
 .vc-tips-title { font-size: 11px; font-weight: 700; color: #64748B; text-transform: uppercase; letter-spacing: .5px; margin-bottom: 8px; }
-.vc-tips ul    { list-style: none; display: flex; flex-direction: column; gap: 5px; }
-.vc-tips li    { font-size: 13px; color: #94A3B8; }
-
-/* Join button */
+.vc-tips ul { list-style: none; display: flex; flex-direction: column; gap: 6px; }
+.vc-tips li { font-size: 13px; color: #94A3B8; display: flex; align-items: center; gap: 7px; }
 .vc-join-btn {
   display: inline-flex; align-items: center; gap: 10px;
   background: linear-gradient(135deg, #16A34A, #0F766E);
@@ -114,43 +65,17 @@
   width: 100%; justify-content: center;
 }
 .vc-join-btn:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 28px rgba(22,163,74,.4); }
-.vc-join-disabled {
-  background: #334155 !important; box-shadow: none !important;
-  cursor: not-allowed !important; opacity: .7;
-}
+.vc-join-disabled { background: #334155 !important; box-shadow: none !important; cursor: not-allowed !important; opacity: .7; }
 .vc-join-btn:disabled { background: #334155; box-shadow: none; cursor: not-allowed; opacity: .7; }
-
 .vc-powered    { font-size: 11px; color: #475569; margin-top: 12px; }
-.vc-ended-icon { font-size: 48px; margin-bottom: 14px; }
-
-/* Active call */
-.vc-call-container {
-  display: flex; flex-direction: column; flex: 1; min-height: 0;
-}
-.vc-jitsi-frame {
-  flex: 1; min-height: 0; width: 100%; background: #000;
-}
-.vc-jitsi-frame iframe {
-  width: 100% !important; height: 100% !important;
-  border: none; display: block;
-}
-.vc-call-bar {
-  display: flex; align-items: center; justify-content: space-between;
-  padding: 10px 20px; background: #1E293B;
-  border-top: 1px solid #334155; flex-shrink: 0;
-}
-.vc-call-info {
-  display: flex; align-items: center; gap: 8px;
-  font-size: 13px; font-weight: 600; color: white;
-}
-.vc-end-btn {
-  display: flex; align-items: center; gap: 6px;
-  background: #DC2626; color: white; border: none;
-  padding: 9px 20px; border-radius: 99px;
-  font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s;
-}
+.vc-ended-icon { display: flex; justify-content: center; margin-bottom: 20px; }
+.vc-call-container { display: flex; flex-direction: column; flex: 1; min-height: 0; }
+.vc-jitsi-frame { flex: 1; min-height: 0; width: 100%; background: #000; }
+.vc-jitsi-frame iframe { width: 100% !important; height: 100% !important; border: none; display: block; }
+.vc-call-bar { display: flex; align-items: center; justify-content: space-between; padding: 10px 20px; background: #1E293B; border-top: 1px solid #334155; flex-shrink: 0; }
+.vc-call-info { display: flex; align-items: center; gap: 8px; font-size: 13px; font-weight: 600; color: white; }
+.vc-end-btn { display: flex; align-items: center; gap: 6px; background: #DC2626; color: white; border: none; padding: 9px 20px; border-radius: 99px; font-size: 13px; font-weight: 700; cursor: pointer; transition: all .2s; }
 .vc-end-btn:hover { background: #B91C1C; }
-
 @media (max-width: 576px) {
   .vc-lobby-card { padding: 20px 14px; }
   .vc-join-btn   { font-size: 14px; padding: 12px 20px; }

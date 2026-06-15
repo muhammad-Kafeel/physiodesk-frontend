@@ -1,6 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Users, Calendar, ShoppingBag, AlertCircle, TrendingUp, ChevronRight, CheckCircle } from 'lucide-react';
+import {
+  Users, Calendar, ShoppingBag, AlertTriangle, TrendingUp,
+  ChevronRight, CheckCircle, Stethoscope, Pill, Activity, Radio
+} from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { adminAPI } from '../../api/services';
 import { toast } from 'react-toastify';
@@ -18,17 +21,17 @@ export default function AdminDashboard() {
   }, []);
 
   if (loading) return <DashboardLayout><div className="pd-spinner" style={{marginTop:60}}/></DashboardLayout>;
-  if (!data)   return <DashboardLayout><div className="pd-empty"><p>Failed to load</p></div></DashboardLayout>;
+  if (!data)   return <DashboardLayout><div className="pd-empty"><p>Failed to load dashboard data.</p></div></DashboardLayout>;
 
   const { totals, recent_appointments, recent_payments, low_stock_medicines, pending_doctors } = data;
 
   const STATS = [
-    { label:'Total Users',      value: totals.users,        icon:<Users size={20}/>,       bg:'#EFF6FF', color:'var(--primary)' },
-    { label:'Doctors',          value: totals.doctors,      icon:<Users size={20}/>,       bg:'#F0FDFA', color:'var(--teal)' },
-    { label:'Appointments',     value: totals.appointments, icon:<Calendar size={20}/>,    bg:'#FDF4FF', color:'#7C3AED' },
-    { label:'Total Revenue',    value:`Rs. ${Number(totals.revenue).toLocaleString()}`, icon:<TrendingUp size={20}/>, bg:'#F0FDF4', color:'#16A34A'},
-    { label:'Orders',           value: totals.orders,       icon:<ShoppingBag size={20}/>, bg:'#FFF7ED', color:'#D97706' },
-    { label:'Open Complaints',  value: totals.complaints,   icon:<AlertCircle size={20}/>, bg:'#FEF2F2', color:'#DC2626' },
+    { label:'Total Users',      value: totals.users,        icon:<Users size={20}/>,        bg:'var(--primary-light)', color:'var(--primary)' },
+    { label:'Doctors',          value: totals.doctors,      icon:<Stethoscope size={20}/>,   bg:'var(--teal-light)',    color:'var(--teal)' },
+    { label:'Appointments',     value: totals.appointments, icon:<Calendar size={20}/>,      bg:'#F5F3FF',              color:'#7C3AED' },
+    { label:'Total Revenue',    value:`Rs. ${Number(totals.revenue).toLocaleString()}`, icon:<TrendingUp size={20}/>, bg:'var(--success-light)', color:'var(--success)' },
+    { label:'Orders',           value: totals.orders,       icon:<ShoppingBag size={20}/>,   bg:'#FFF7ED',              color:'#D97706' },
+    { label:'Open Complaints',  value: totals.complaints,   icon:<AlertTriangle size={20}/>, bg:'var(--danger-light)',  color:'var(--danger)' },
   ];
 
   return (
@@ -39,9 +42,12 @@ export default function AdminDashboard() {
         <div className="ad-banner">
           <div>
             <h1 className="ad-title">Admin Dashboard</h1>
-            <p className="ad-sub">Overview of PhysioDesk platform activity</p>
+            <p className="ad-sub">Real-time overview of PhysioDesk platform activity</p>
           </div>
-          <span className="ad-live-badge">🟢 Live</span>
+          <div className="ad-live-badge">
+            <span className="ad-live-dot"/>
+            Live
+          </div>
         </div>
 
         {/* Stats */}
@@ -62,17 +68,20 @@ export default function AdminDashboard() {
           {/* Pending doctor verifications */}
           <div className="ad-card">
             <div className="pd-section-head">
-              <p className="pd-section-title">⏳ Pending Verifications</p>
+              <p className="pd-section-title">Pending Verifications</p>
               <Link to="/admin/doctors" className="pd-view-all">Manage <ChevronRight size={14}/></Link>
             </div>
             {pending_doctors.length === 0 ? (
-              <div className="pd-empty"><CheckCircle size={28}/><p style={{marginTop:8}}>All doctors verified!</p></div>
+              <div className="pd-empty">
+                <CheckCircle size={36}/>
+                <p style={{marginTop:10}}>All doctors are verified</p>
+              </div>
             ) : pending_doctors.map(d => (
               <div key={d.id} className="ad-doc-row">
                 <div className="ad-avatar">{d.user?.name?.[0] || 'D'}</div>
                 <div className="ad-row-info">
                   <p className="ad-row-name">Dr. {d.user?.name}</p>
-                  <p className="ad-row-sub">{d.specialization} · PMDC: {d.pmdc_number}</p>
+                  <p className="ad-row-sub">{d.specialization} &middot; PMDC: {d.pmdc_number}</p>
                 </div>
                 <Link to="/admin/doctors" className="ad-action-link">Review</Link>
               </div>
@@ -82,14 +91,17 @@ export default function AdminDashboard() {
           {/* Low stock alert */}
           <div className="ad-card">
             <div className="pd-section-head">
-              <p className="pd-section-title">⚠️ Low Stock Medicines</p>
+              <p className="pd-section-title">Low Stock Medicines</p>
               <Link to="/admin/medicines" className="pd-view-all">Manage <ChevronRight size={14}/></Link>
             </div>
             {low_stock_medicines.length === 0 ? (
-              <div className="pd-empty"><p style={{fontSize:28}}>✅</p><p style={{marginTop:8}}>Stock levels OK</p></div>
+              <div className="pd-empty">
+                <CheckCircle size={36}/>
+                <p style={{marginTop:10}}>All stock levels are healthy</p>
+              </div>
             ) : low_stock_medicines.map(m => (
               <div key={m.id} className="ad-med-row">
-                <div className="ad-med-icon">💊</div>
+                <div className="ad-med-icon"><Pill size={16}/></div>
                 <div className="ad-row-info">
                   <p className="ad-row-name">{m.name}</p>
                   <p className="ad-row-sub">{m.category}</p>
@@ -119,7 +131,7 @@ export default function AdminDashboard() {
                     <td>{a.patient?.user?.name || '—'}</td>
                     <td>Dr. {a.doctor?.user?.name || '—'}</td>
                     <td>{a.appointment_date}</td>
-                    <td>{a.type}</td>
+                    <td style={{ textTransform:'capitalize' }}>{a.type}</td>
                     <td><span className={`ad-status ad-status-${a.status}`}>{a.status}</span></td>
                     <td>Rs. {Number(a.fee).toLocaleString()}</td>
                   </tr>

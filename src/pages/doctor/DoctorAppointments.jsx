@@ -1,6 +1,9 @@
-﻿import { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, Clock, Video, CheckCircle, FileText, ChevronDown, ChevronUp, User } from 'lucide-react';
+import {
+  Calendar, Clock, Video, CheckCircle, FileText,
+  ChevronDown, ChevronUp, User, MapPin, ClipboardList
+} from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { doctorAPI } from '../../api/services';
 import { toast } from 'react-toastify';
@@ -87,7 +90,7 @@ export default function DoctorAppointments() {
         {loading ? <div className="pd-spinner" /> :
           filtered.length === 0 ? (
             <div className="pd-empty">
-              <p style={{ fontSize: 40 }}>📅</p>
+              <Calendar size={48}/>
               <p>No {tab === 'all' ? '' : tab} appointments</p>
             </div>
           ) : (
@@ -109,7 +112,7 @@ export default function DoctorAppointments() {
                         <div className="da-meta-row">
                           <span><Calendar size={12}/> {a.appointment_date}</span>
                           <span><Clock size={12}/> {a.appointment_time}</span>
-                          <span>{a.type === 'video' ? <><Video size={12}/> Video</> : '🏥 In-person'}</span>
+                          <span>{a.type === 'video' ? <><Video size={12}/> Video</> : <><MapPin size={12}/> In-person</>}</span>
                         </div>
                       </div>
 
@@ -142,7 +145,7 @@ export default function DoctorAppointments() {
 
                           {/* Symptoms & notes */}
                           <div className="da-detail-section">
-                            <p className="da-detail-title">📋 Clinical Info</p>
+                            <p className="da-detail-title"><ClipboardList size={14}/> Clinical Info</p>
                             {a.symptoms ? (
                               <div className="da-symptoms-box">
                                 <p className="da-symptoms-label">Symptoms</p>
@@ -161,7 +164,7 @@ export default function DoctorAppointments() {
                         {/* Payment status */}
                         <div className="da-pay-row">
                           <span className={`da-pay-badge ${a.is_paid ? 'paid' : 'unpaid'}`}>
-                            {a.is_paid ? '✅ Paid' : '⏳ Payment Pending'}
+                            {a.is_paid ? <><CheckCircle size={12}/> Paid</> : <><Clock size={12}/> Payment Pending</>}
                           </span>
                           {a.video_room_id && (
                             <span className="da-room-id">Room: {a.video_room_id}</span>
@@ -195,7 +198,7 @@ export default function DoctorAppointments() {
                             </Link>
                           )}
                           {a.status === 'completed' && a.prescription && (
-                            <span className="da-rx-done">✅ Prescription written</span>
+                            <span className="da-rx-done"><CheckCircle size={13}/> Prescription written</span>
                           )}
                         </div>
                       </div>

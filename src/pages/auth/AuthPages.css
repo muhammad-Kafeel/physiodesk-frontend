@@ -68,9 +68,7 @@
   background: rgba(255, 255, 255, .15);
   border: 1px solid rgba(255, 255, 255, .2);
   display: flex; align-items: center; justify-content: center;
-  font-size: 26px; font-weight: 900;
   color: #fff;
-  letter-spacing: -1px;
 }
 .ap-wordmark-name {
   font-size: 22px;
@@ -257,9 +255,8 @@
 }
 .rc-bar-icon {
   width: 32px; height: 32px; border-radius: 9px;
-  background: #014E78; color: #fff;
+  background: #014E78;
   display: flex; align-items: center; justify-content: center;
-  font-size: 15px; font-weight: 900;
 }
 .rc-bar-name { font-size: 15px; font-weight: 800; color: #014E78; letter-spacing: -0.02em; }
 .rc-bar-back {

@@ -1,13 +1,31 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Calendar, Clock, Video, ChevronRight, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, Video, ChevronRight, AlertCircle, MapPin, CreditCard } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { doctorAPI, appointmentAPI } from '../../api/services';
+import { storageUrl } from '../../utils/helpers'; // F20
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import './BookAppointment.css';
 
-const TIMES = ['09:00','09:30','10:00','10:30','11:00','11:30','12:00','14:00','14:30','15:00','15:30','16:00','16:30','17:00'];
+// F09 — Generate 30-min intervals between a start and end time string "HH:MM"
+function generateSlots(startStr, endStr) {
+  const [sh, sm] = startStr.split(':').map(Number);
+  const [eh, em] = endStr.split(':').map(Number);
+  const slots = [];
+  let cur = sh * 60 + sm;
+  const end = eh * 60 + em;
+  while (cur + 30 <= end) {
+    const h = String(Math.floor(cur / 60)).padStart(2, '0');
+    const m = String(cur % 60).padStart(2, '0');
+    slots.push(`${h}:${m}`);
+    cur += 30;
+  }
+  return slots;
+}
+
+// Maps JS getDay() (0=Sun) to our day_of_week strings
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
 
 export default function BookAppointment() {
   const { id }                    = useParams();
@@ -19,19 +37,51 @@ export default function BookAppointment() {
   const [type,     setType]       = useState('video');
   const [symptoms, setSymptoms]   = useState('');
   const [notes,    setNotes]      = useState('');
+  const [takenTimes, setTakenTimes] = useState([]);
   const { user }                  = useAuth();
   const navigate                  = useNavigate();
 
-  // min date = today
   const today = new Date().toISOString().split('T')[0];
 
+  // F24 — navigate is now in the dependency array
   useEffect(() => {
-    if (!user) { navigate('/login'); return; }
+    if (!user) { navigate('/patient/login'); return; }
     doctorAPI.getById(id)
       .then(r => setDoctor(r.data.data))
       .catch(() => { toast.error('Doctor not found'); navigate('/doctors'); })
       .finally(() => setLoading(false));
-  }, [id]);
+  }, [id, navigate]);
+
+  // F09 — Derive available time slots from the doctor's schedule for the chosen date
+  const availableSlots = useMemo(() => {
+    if (!date || !doctor?.timeSlots?.length) return [];
+    const dayName = DAY_NAMES[new Date(date + 'T00:00:00').getDay()];
+    const daySlots = doctor.timeSlots.filter(
+      s => s.day_of_week === dayName && s.is_available
+    );
+    const allTimes = [];
+    daySlots.forEach(s => {
+      generateSlots(s.start_time.slice(0, 5), s.end_time.slice(0, 5))
+        .forEach(t => allTimes.push(t));
+    });
+    return [...new Set(allTimes)].sort().filter(t => !takenTimes.includes(t));
+  }, [date, doctor, takenTimes]);
+
+  // Clear selected time when date changes and slots differ
+  useEffect(() => {
+    if (time && !availableSlots.includes(time)) setTime('');
+  }, [availableSlots]);
+
+  // Pull already-booked times for the chosen date so taken slots aren't offered.
+  // Falls back silently to the client-computed slots if the request fails.
+  useEffect(() => {
+    if (!date || !doctor) { setTakenTimes([]); return; }
+    let cancelled = false;
+    doctorAPI.getAvailability(doctor.id, date)
+      .then(r => { if (!cancelled) setTakenTimes(r.data?.data?.taken || []); })
+      .catch(() => { if (!cancelled) setTakenTimes([]); });
+    return () => { cancelled = true; };
+  }, [date, doctor]);
 
   const submit = async (e) => {
     e.preventDefault();
@@ -39,7 +89,7 @@ export default function BookAppointment() {
     if (!time) { toast.error('Please select a time slot'); return; }
     setSaving(true);
     try {
-      const res = await appointmentAPI.book({
+      await appointmentAPI.book({
         doctor_id: doctor.id,
         appointment_date: date,
         appointment_time: time,
@@ -47,8 +97,8 @@ export default function BookAppointment() {
         symptoms,
         notes,
       });
-      toast.success('Appointment booked! Proceed to payment.');
-      navigate(`/payment/appointment/${res.data.data.id}`);
+      toast.success("Appointment requested! You'll be able to pay once the doctor confirms it.");
+      navigate('/patient/appointments');
     } catch (err) {
       toast.error(err.response?.data?.message || 'Booking failed. Try again.');
     } finally {
@@ -56,7 +106,7 @@ export default function BookAppointment() {
     }
   };
 
-  if (loading) return <Layout><div className="pd-spinner" style={{marginTop:80}} /></Layout>;
+  if (loading) return <Layout><div className="pd-spinner" style={{ marginTop: 80 }} /></Layout>;
   if (!doctor)  return null;
 
   const u = doctor.user || {};
@@ -65,7 +115,6 @@ export default function BookAppointment() {
     <Layout>
       <div className="pd-container pd-section">
 
-        {/* Breadcrumb */}
         <div className="dd-breadcrumb">
           <Link to="/">Home</Link><ChevronRight size={13} />
           <Link to="/doctors">Doctors</Link><ChevronRight size={13} />
@@ -74,8 +123,6 @@ export default function BookAppointment() {
         </div>
 
         <div className="ba-layout">
-
-          {/* Left — booking form */}
           <div className="ba-form-wrap">
             <div className="ba-form-card">
               <h2 className="ba-title">Book an Appointment</h2>
@@ -88,8 +135,8 @@ export default function BookAppointment() {
                   <label className="ba-label">Consultation Type</label>
                   <div className="ba-type-row">
                     {[
-                      { val:'video',     icon:<Video size={18} />,    label:'Video Call',   sub:'Online from home' },
-                      { val:'in_person', icon:<Calendar size={18} />, label:'In Person',    sub:'Visit clinic' },
+                      { val: 'video',     icon: <Video size={18} />,    label: 'Video Call',  sub: 'Online from home' },
+                      { val: 'in_person', icon: <Calendar size={18} />, label: 'In Person',   sub: 'Visit clinic' },
                     ].map(t => (
                       <button key={t.val} type="button"
                         className={`ba-type-card ${type === t.val ? 'active' : ''}`}
@@ -107,23 +154,32 @@ export default function BookAppointment() {
                   <label className="ba-label"><Calendar size={14} /> Select Date</label>
                   <input
                     type="date" min={today}
-                    value={date} onChange={e => setDate(e.target.value)}
+                    value={date} onChange={e => { setDate(e.target.value); setTime(''); }}
                     className="ba-input" required
                   />
                 </div>
 
-                {/* Time slots */}
+                {/* F09 — Dynamic time slots from doctor's schedule */}
                 <div className="ba-field">
                   <label className="ba-label"><Clock size={14} /> Select Time</label>
-                  <div className="ba-times-grid">
-                    {TIMES.map(t => (
-                      <button key={t} type="button"
-                        className={`ba-time-btn ${time === t ? 'active' : ''}`}
-                        onClick={() => setTime(t)}>
-                        {t}
-                      </button>
-                    ))}
-                  </div>
+                  {!date ? (
+                    <p style={{ fontSize: 13, color: 'var(--gray-400)' }}>Please select a date first.</p>
+                  ) : availableSlots.length === 0 ? (
+                    <div className="ba-notice" style={{ marginTop: 0 }}>
+                      <AlertCircle size={15} />
+                      <p>No available slots for this day. The doctor may not work on this day. Please try a different date.</p>
+                    </div>
+                  ) : (
+                    <div className="ba-times-grid">
+                      {availableSlots.map(t => (
+                        <button key={t} type="button"
+                          className={`ba-time-btn ${time === t ? 'active' : ''}`}
+                          onClick={() => setTime(t)}>
+                          {t}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 {/* Symptoms */}
@@ -131,7 +187,7 @@ export default function BookAppointment() {
                   <label className="ba-label">Describe Your Symptoms <span className="ba-optional">(optional)</span></label>
                   <textarea
                     value={symptoms} onChange={e => setSymptoms(e.target.value)}
-                    rows={3} placeholder="e.g. Lower back pain for 2 weeks, pain worsens when sitting..."
+                    rows={3} placeholder="e.g. Lower back pain for 2 weeks..."
                     className="ba-textarea"
                   />
                 </div>
@@ -146,26 +202,26 @@ export default function BookAppointment() {
                   />
                 </div>
 
-                {/* Note */}
                 <div className="ba-notice">
                   <AlertCircle size={15} />
                   <p>Payment will be collected after the doctor confirms your appointment.</p>
                 </div>
 
-                <button type="submit" className="ba-submit" disabled={saving}>
+                <button type="submit" className="ba-submit" disabled={saving || !time}>
                   {saving ? <span className="auth-spinner" /> : <><Calendar size={16} /> Confirm Booking</>}
                 </button>
               </form>
             </div>
           </div>
 
-          {/* Right — doctor summary */}
+          {/* Doctor summary */}
           <div className="ba-summary">
             <div className="ba-doctor-card">
               <p className="ba-summary-title">Booking Summary</p>
               <div className="ba-doc-info">
                 {doctor.profile_photo
-                  ? <img src={`http://localhost:8000/storage/${doctor.profile_photo}`} alt={u.name} className="ba-doc-photo" />
+                  // F20 — Use storageUrl helper instead of hardcoded localhost
+                  ? <img src={storageUrl(doctor.profile_photo)} alt={u.name} className="ba-doc-photo" />
                   : <div className="ba-doc-placeholder">{u.name?.[0]}</div>
                 }
                 <div>
@@ -176,8 +232,10 @@ export default function BookAppointment() {
               </div>
               <div className="ba-summary-items">
                 <div className="ba-summary-item">
-                  <span>Consultation Type</span>
-                  <span className="ba-summary-val">{type === 'video' ? '📹 Video Call' : '🏥 In Person'}</span>
+                  <span>Type</span>
+                  <span className="ba-summary-val">
+                    {type === 'video' ? <><Video size={13} /> Video Call</> : <><MapPin size={13} /> In Person</>}
+                  </span>
                 </div>
                 <div className="ba-summary-item">
                   <span>Date</span>
@@ -193,7 +251,7 @@ export default function BookAppointment() {
                   <span className="ba-fee">Rs. {Number(doctor.consultation_fee).toLocaleString()}</span>
                 </div>
               </div>
-              <p className="ba-payment-note">💳 Payment via JazzCash, EasyPaisa, or Bank Transfer</p>
+              <p className="ba-payment-note"><CreditCard size={13} /> JazzCash or Bank Transfer</p>
             </div>
           </div>
         </div>

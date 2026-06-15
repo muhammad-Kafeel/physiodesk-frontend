@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
-import { useAuth } from '../../context/AuthContext';
+import { useDoctorAuth } from '../../context/AuthContext';
 import { doctorAuthAPI } from '../../api/services';
 import { toast } from 'react-toastify';
 import './AuthPages.css';
@@ -10,7 +10,7 @@ export default function DoctorLoginPage() {
   const [form,    setForm]    = useState({ email: '', password: '' });
   const [show,    setShow]    = useState(false);
   const [loading, setLoading] = useState(false);
-  const { login } = useAuth();
+  const { login } = useDoctorAuth();
   const navigate  = useNavigate();
 
   const handle = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
@@ -21,7 +21,7 @@ export default function DoctorLoginPage() {
     try {
       const { data } = await doctorAuthAPI.login(form);
       const { user, token } = data.data;
-      login(user, token, 'doctor');
+      login(user, token);   // portal is implicit — this is useDoctorAuth
       toast.success(`Welcome, Dr. ${user.name.split(' ')[0]}!`);
       navigate(user.doctor ? '/doctor/dashboard' : '/doctor/profile?welcome=1');
     } catch (err) {
@@ -35,7 +35,12 @@ export default function DoctorLoginPage() {
     <div className="ap-page">
       <Link to="/" className="ap-panel ap-panel--teal" style={{ textDecoration: 'none' }}>
         <div className="ap-wordmark">
-          <div className="ap-wordmark-icon">P</div>
+          <div className="ap-wordmark-icon">
+            <svg width="26" height="26" viewBox="0 0 26 26" fill="none">
+              <rect x="12" y="3" width="2" height="20" rx="1" fill="white"/>
+              <rect x="3" y="12" width="20" height="2" rx="1" fill="white"/>
+            </svg>
+          </div>
           <span className="ap-wordmark-name">PhysioDesk</span>
         </div>
       </Link>
@@ -75,6 +80,9 @@ export default function DoctorLoginPage() {
             </button>
           </form>
 
+          <p className="ap-footer-link" style={{ marginTop: 4 }}>
+            <Link to="/doctor/forgot-password">Forgot password?</Link>
+          </p>
           <p className="ap-footer-link">
             No account? <Link to="/register/doctor">Create one</Link>
           </p>

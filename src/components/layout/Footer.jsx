@@ -11,7 +11,12 @@ export default function Footer() {
           {/* Brand */}
           <div className="pd-footer-brand">
             <div className="pd-footer-logo">
-              <div className="pd-footer-logo-icon">P</div>
+              <div className="pd-footer-logo-icon">
+                <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+                  <rect x="7" y="2" width="2" height="12" rx="1" fill="white"/>
+                  <rect x="2" y="7" width="12" height="2" rx="1" fill="white"/>
+                </svg>
+              </div>
               <div>
                 <span className="pd-footer-logo-text">PhysioDesk</span>
                 <span className="pd-footer-logo-tag">Virtual Clinic</span>

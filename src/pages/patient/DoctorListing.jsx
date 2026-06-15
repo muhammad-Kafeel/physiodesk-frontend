@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Star, MapPin, Video, Clock, ChevronRight, SlidersHorizontal, X } from 'lucide-react';
+import { Star, MapPin, Video, Clock, ChevronRight, SlidersHorizontal, X, Stethoscope } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { doctorAPI } from '../../api/services';
+import { storageUrl } from '../../utils/helpers'; // F20
 import { DoctorCardSkeleton } from '../../components/common/Skeleton';
 import './DoctorListing.css';
 
@@ -170,7 +171,7 @@ function DoctorCard({ doc }) {
       <div className="dc-card-inner">
         <div className="dc-photo-wrap">
           {doc.profile_photo
-            ? <img src={`http://localhost:8000/storage/${doc.profile_photo}`} alt={user.name} className="dc-photo"/>
+            ? <img src={storageUrl(doc.profile_photo)} alt={user.name} className="dc-photo"/>
             : <div className="dc-photo-placeholder">{user.name?.[0] || 'D'}</div>
           }
           {doc.is_available && <span className="dc-available">Available</span>}

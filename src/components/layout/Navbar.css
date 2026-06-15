@@ -22,12 +22,10 @@
   gap: 10px;
   text-decoration: none;
 }
-.nb-logo-icon {
+.nb-logo-mark {
   width: 32px; height: 32px;
   border-radius: 9px;
-  color: #fff;
   display: flex; align-items: center; justify-content: center;
-  font-size: 16px; font-weight: 800;
   flex-shrink: 0;
 }
 .nb-logo-name { font-size: 15px; font-weight: 800; color: var(--gray-800); }
@@ -48,6 +46,7 @@
   flex-shrink: 0;
 }
 .nb-logout {
+  display: inline-flex; align-items: center; gap: 6px;
   font-size: 13px; font-weight: 600;
   padding: 6px 14px; border-radius: 8px;
   border: 1.5px solid var(--gray-200);

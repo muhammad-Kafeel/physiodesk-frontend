@@ -1,189 +1,211 @@
-import api from './axios';
+import { patientApi, doctorApi, adminApi, getApi } from './axios';
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  PATIENT AUTH  —  /api/patient/auth/...
-//  Completely isolated from doctor / admin auth.
-//  Same email can be registered independently on doctor side.
+//  PATIENT AUTH  —  always uses patientApi (pd_patient_token)
 // ─────────────────────────────────────────────────────────────────────────────
 export const patientAuthAPI = {
-  register:       (data) => api.post('/patient/auth/register', data),
-  login:          (data) => api.post('/patient/auth/login',    data),
-  logout:         ()     => api.post('/patient/auth/logout'),
-  me:             ()     => api.get('/patient/auth/me'),
-  changePassword: (data) => api.post('/patient/auth/change-password', data),
+  register:       (data) => patientApi.post('/patient/auth/register', data),
+  login:          (data) => patientApi.post('/patient/auth/login',    data),
+  logout:         ()     => patientApi.post('/patient/auth/logout'),
+  me:             ()     => patientApi.get('/patient/auth/me'),
+  changePassword: (data) => patientApi.post('/patient/auth/change-password', data),
+  forgotPassword: (data) => patientApi.post('/patient/auth/forgot-password', data),
+  resetPassword:  (data) => patientApi.post('/patient/auth/reset-password', data),
+  resendVerification: () => patientApi.post('/patient/auth/resend-verification'),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  DOCTOR AUTH  —  /api/doctor/auth/...
+//  DOCTOR AUTH  —  always uses doctorApi (pd_doctor_token)
 // ─────────────────────────────────────────────────────────────────────────────
 export const doctorAuthAPI = {
-  register:       (data) => api.post('/doctor/auth/register', data),
-  login:          (data) => api.post('/doctor/auth/login',    data),
-  logout:         ()     => api.post('/doctor/auth/logout'),
-  me:             ()     => api.get('/doctor/auth/me'),
-  changePassword: (data) => api.post('/doctor/auth/change-password', data),
+  register:       (data) => doctorApi.post('/doctor/auth/register', data),
+  login:          (data) => doctorApi.post('/doctor/auth/login',    data),
+  logout:         ()     => doctorApi.post('/doctor/auth/logout'),
+  me:             ()     => doctorApi.get('/doctor/auth/me'),
+  changePassword: (data) => doctorApi.post('/doctor/auth/change-password', data),
+  forgotPassword: (data) => doctorApi.post('/doctor/auth/forgot-password', data),
+  resetPassword:  (data) => doctorApi.post('/doctor/auth/reset-password', data),
+  resendVerification: () => doctorApi.post('/doctor/auth/resend-verification'),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  ADMIN AUTH  —  /api/admin/auth/...
-//  No public register endpoint.
+//  ADMIN AUTH  —  always uses adminApi (pd_admin_token)
 // ─────────────────────────────────────────────────────────────────────────────
 export const adminAuthAPI = {
-  login:          (data) => api.post('/admin/auth/login',    data),
-  logout:         ()     => api.post('/admin/auth/logout'),
-  me:             ()     => api.get('/admin/auth/me'),
-  changePassword: (data) => api.post('/admin/auth/change-password', data),
+  login:          (data) => adminApi.post('/admin/auth/login',    data),
+  logout:         ()     => adminApi.post('/admin/auth/logout'),
+  me:             ()     => adminApi.get('/admin/auth/me'),
+  changePassword: (data) => adminApi.post('/admin/auth/change-password', data),
+  forgotPassword: (data) => adminApi.post('/admin/auth/forgot-password', data),
+  resetPassword:  (data) => adminApi.post('/admin/auth/reset-password', data),
 };
 
-// ─────────────────────────────────────────────────────────────────────────────
-//  LEGACY  (kept briefly during token transition — will be removed)
-// ─────────────────────────────────────────────────────────────────────────────
+// Legacy shim — kept for any missed import during transition
 export const authAPI = {
-  logout: () => api.post('/auth/logout'),
-  me:     () => api.get('/auth/me'),
+  logout: () => patientApi.post('/auth/logout'),
+  me:     () => patientApi.get('/auth/me'),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  DOCTOR  (profile, schedule, appointments)
+//  DOCTOR  (protected endpoints → doctorApi; public listings → getApi)
 // ─────────────────────────────────────────────────────────────────────────────
 export const doctorAPI = {
-  getAll:          (params) => api.get('/doctors', { params }),
-  getById:         (id)     => api.get(`/doctors/${id}`),
-  getMyProfile:    ()       => api.get('/doctor/profile'),
-  createProfile:   (data)   => api.post('/doctor/profile', data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  updateProfile:   (data)   => api.post('/doctor/profile', data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  addTimeSlot:     (data)   => api.post('/doctor/time-slots', data),
-  deleteTimeSlot:  (id)     => api.delete(`/doctor/time-slots/${id}`),
-  getAppointments: ()       => api.get('/doctor/appointments'),
-  confirmAppt:     (id)     => api.post(`/doctor/appointments/${id}/confirm`),
-  completeAppt:    (id)     => api.post(`/doctor/appointments/${id}/complete`),
+  getAll:          (params) => getApi().get('/doctors', { params }),
+  getById:         (id)     => getApi().get(`/doctors/${id}`),
+  getAvailability: (id, date) => getApi().get(`/doctors/${id}/availability`, { params: { date } }),
+  getMyProfile:    ()       => doctorApi.get('/doctor/profile'),
+  createProfile:   (data)   => doctorApi.post('/doctor/profile', data, {
+                                 headers: { 'Content-Type': 'multipart/form-data' },
+                               }),
+  updateProfile:   (data)   => doctorApi.put('/doctor/profile', data),
+  addTimeSlot:     (data)   => doctorApi.post('/doctor/time-slots', data),
+  deleteTimeSlot:  (id)     => doctorApi.delete(`/doctor/time-slots/${id}`),
+  getAppointments: ()       => doctorApi.get('/doctor/appointments'),
+  confirmAppt:     (id)     => doctorApi.post(`/doctor/appointments/${id}/confirm`),
+  completeAppt:    (id)     => doctorApi.post(`/doctor/appointments/${id}/complete`),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  PATIENT  (profile, records, prescriptions)
+//  PATIENT  (all protected endpoints → patientApi)
 // ─────────────────────────────────────────────────────────────────────────────
 export const patientAPI = {
-  getMyProfile:           ()     => api.get('/patient/profile'),
-  myProfile:              ()     => api.get('/patient/profile'),
-  createProfile:          (data) => api.post('/patient/profile', data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  updateProfile:          (data) => api.put('/patient/profile', data),
-  updateProfileWithPhoto: (data) => api.post('/patient/profile', data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  myMedicalRecords: () => api.get('/patient/medical-records'),
-  myPrescriptions:  () => api.get('/patient/prescriptions'),
-  myAppointments:   () => api.get('/patient/appointments'),
-  myOrders:         () => api.get('/patient/orders'),
-  getOrderById:     (id) => api.get(`/patient/orders/${id}`),
-  myPayments:       () => api.get('/patient/payments'),
+  getMyProfile:           ()     => patientApi.get('/patient/profile'),
+  myProfile:              ()     => patientApi.get('/patient/profile'),
+  createProfile:          (data) => patientApi.post('/patient/profile', data, {
+                                      headers: { 'Content-Type': 'multipart/form-data' },
+                                    }),
+  updateProfile:          (data) => patientApi.put('/patient/profile', data),
+  updateProfileWithPhoto: (data) => patientApi.post('/patient/profile', data, {
+                                      headers: { 'Content-Type': 'multipart/form-data' },
+                                    }),
+  myMedicalRecords: () => patientApi.get('/patient/medical-records'),
+  myPrescriptions:  () => patientApi.get('/patient/prescriptions'),
+  myAppointments:   () => patientApi.get('/patient/appointments'),
+  myOrders:         () => patientApi.get('/patient/orders'),
+  getOrderById:    (id) => patientApi.get(`/patient/orders/${id}`),
+  myPayments:       () => patientApi.get('/patient/payments'),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  APPOINTMENTS
+//  APPOINTMENTS  (patient books + cancels; getApi for shared reads)
 // ─────────────────────────────────────────────────────────────────────────────
 export const appointmentAPI = {
-  myAppointments: ()           => api.get('/patient/appointments'),
-  book:           (data)       => api.post('/appointments', data),
-  getById:        (id)         => api.get(`/appointments/${id}`),
-  cancel:         (id, data)   => api.post(`/appointments/${id}/cancel`, data),
-  reschedule:     (id, data)   => api.post(`/appointments/${id}/reschedule`, data),
-  addReview:      (id, data)   => api.post(`/appointments/${id}/review`, data),
+  myAppointments: ()           => patientApi.get('/patient/appointments'),
+  book:           (data)       => patientApi.post('/appointments', data),
+  getById:        (id)         => getApi().get(`/appointments/${id}`),
+  cancel:         (id, data)   => patientApi.post(`/appointments/${id}/cancel`, data),
+  reschedule:     (id, data)   => patientApi.post(`/appointments/${id}/reschedule`, data),
+  addReview:      (id, data)   => patientApi.post(`/appointments/${id}/review`, data),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  PHARMACY
+//  PHARMACY  (patient only; public medicine listing → getApi, no token needed)
 // ─────────────────────────────────────────────────────────────────────────────
 export const pharmacyAPI = {
-  getMedicines:          (params)   => api.get('/medicines', { params }),
-  getMedicineById:       (id)       => api.get(`/medicines/${id}`),
-  myOrders:              ()         => api.get('/patient/orders'),
-  placeOrder:            (data)     => api.post('/orders', data),
-  orderFromPrescription: (id, data) => api.post(`/orders/from-prescription/${id}`, data),
-  previewPrescription:   (id)       => api.get(`/orders/prescription-preview/${id}`),
+  getMedicines:          (params)   => getApi().get('/medicines', { params }),
+  getMedicineById:       (id)       => getApi().get(`/medicines/${id}`),
+  myOrders:              ()         => patientApi.get('/patient/orders'),
+  placeOrder:            (data)     => patientApi.post('/orders', data),
+  orderFromPrescription: (id, data) => patientApi.post(`/orders/from-prescription/${id}`, data),
+  previewPrescription:   (id)       => patientApi.get(`/orders/prescription-preview/${id}`),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  PAYMENTS
+//  PAYMENTS  (patient only)
 // ─────────────────────────────────────────────────────────────────────────────
 export const paymentAPI = {
-  payAppointment: (id, data) => api.post(`/payments/appointment/${id}`, data),
-  payOrder:       (id, data) => api.post(`/payments/order/${id}`, data),
+  initiateJazzCashAppointment: (id)       => patientApi.post(`/payments/jazzcash/appointment/${id}`),
+  initiateJazzCashOrder:       (id)       => patientApi.post(`/payments/jazzcash/order/${id}`),
+  payAppointment:              (id, data, config) => patientApi.post(`/payments/appointment/${id}`, data, config),
+  payOrder:                    (id, data, config) => patientApi.post(`/payments/order/${id}`, data, config),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  PRESCRIPTIONS
+//  Doctor writes → doctorApi.  Both doctor + patient read → getApi()
+//  getApi() picks the right instance automatically from the current URL path:
+//    /doctor/* → doctorApi,  /patient/* → patientApi,  /admin/* → adminApi
 // ─────────────────────────────────────────────────────────────────────────────
 export const prescriptionAPI = {
-  getById:     (id)                  => api.get(`/prescriptions/${id}`),
-  downloadPdf: (id)                  => api.get(`/prescriptions/${id}/download`, { responseType: 'blob' }),
-  create:      (appointmentId, data) => api.post(`/appointments/${appointmentId}/prescriptions`, data),
+  getById:     (id)                  => getApi().get(`/prescriptions/${id}`),
+  downloadPdf: (id)                  => getApi().get(`/prescriptions/${id}/download`, {
+                                          responseType: 'blob',
+                                        }),
+  create:      (appointmentId, data) => doctorApi.post(
+                                          `/appointments/${appointmentId}/prescriptions`, data
+                                        ),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
 //  MEDICAL RECORDS
+//  Doctor creates → doctorApi.  Both doctor + patient read → getApi()
 // ─────────────────────────────────────────────────────────────────────────────
 export const medicalRecordAPI = {
-  getById:      (id)        => api.get(`/medical-records/${id}`),
-  getByPatient: (patientId) => api.get(`/medical-records/patient/${patientId}`),
-  create:       (appointmentId, data) => api.post(`/appointments/${appointmentId}/medical-records`, data),
+  getById:      (id)        => getApi().get(`/medical-records/${id}`),
+  getByPatient: (patientId) => getApi().get(`/medical-records/patient/${patientId}`),
+  create:       (appointmentId, data) => doctorApi.post(
+                                           `/appointments/${appointmentId}/medical-records`, data
+                                         ),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  COMPLAINTS
+//  COMPLAINTS  (both doctor + patient can file; getApi picks correct token)
+//  Only patient can delete → explicit patientApi
 // ─────────────────────────────────────────────────────────────────────────────
 export const complaintAPI = {
-  list:   ()           => api.get('/complaints'),
-  store:  (data)       => api.post('/complaints', data),
-  update: (id, data)   => api.put(`/complaints/${id}`, data),
-  delete: (id)         => api.delete(`/complaints/${id}`),
+  list:   ()           => getApi().get('/complaints'),
+  store:  (data)       => getApi().post('/complaints', data),
+  update: (id, data)   => getApi().put(`/complaints/${id}`, data),
+  delete: (id)         => patientApi.delete(`/complaints/${id}`),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  BLOGS
+//  BLOGS  (doctor manages → doctorApi; public + patient reads → getApi)
 // ─────────────────────────────────────────────────────────────────────────────
 export const blogAPI = {
-  list:      (params)   => api.get('/blogs', { params }),
-  getBySlug: (slug)     => api.get(`/blogs/${slug}`),
-  myBlogs:   ()         => api.get('/blogs/my-blogs'),
-  create:    (data)     => api.post('/blogs', data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  update:    (id, data) => api.post(`/blogs/${id}`, data, {
-    headers: { 'Content-Type': 'multipart/form-data' },
-  }),
-  delete:    (id)       => api.delete(`/blogs/${id}`),
+  list:      (params)   => getApi().get('/blogs', { params }),
+  getBySlug: (slug)     => getApi().get(`/blogs/${slug}`),
+  myBlogs:   ()         => doctorApi.get('/blogs/my-blogs'),
+  create:    (data)     => doctorApi.post('/blogs', data, {
+                             headers: { 'Content-Type': 'multipart/form-data' },
+                           }),
+  update:    (id, data) => doctorApi.post(`/blogs/${id}`, data, {
+                             headers: { 'Content-Type': 'multipart/form-data' },
+                           }),
+  delete:    (id)       => doctorApi.delete(`/blogs/${id}`),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  REVIEWS
+//  REVIEWS  (patient writes → patientApi; public reads → getApi)
 // ─────────────────────────────────────────────────────────────────────────────
 export const reviewAPI = {
-  getDoctorReviews: (doctorId)            => api.get(`/doctors/${doctorId}/reviews`),
-  create:           (appointmentId, data) => api.post(`/appointments/${appointmentId}/review`, data),
+  getDoctorReviews: (doctorId)            => getApi().get(`/doctors/${doctorId}/reviews`),
+  create:           (appointmentId, data) => patientApi.post(
+                                               `/appointments/${appointmentId}/review`, data
+                                             ),
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
-//  ADMIN
+//  ADMIN  (all endpoints → adminApi, always)
 // ─────────────────────────────────────────────────────────────────────────────
 export const adminAPI = {
-  getDashboard:      ()         => api.get('/admin/dashboard'),
-  getUsers:          (params)   => api.get('/admin/users', { params }),
-  toggleUserStatus:  (id)       => api.put(`/admin/users/${id}/toggle-status`),
-  deleteUser:        (id)       => api.delete(`/admin/users/${id}`),
-  verifyDoctor:      (id)       => api.post(`/admin/doctors/${id}/verify`),
-  rejectDoctor:      (id, data) => api.post(`/admin/doctors/${id}/reject`, data),
-  getComplaints:     (params)   => api.get('/admin/complaints', { params }),
-  resolveComplaint:  (id, data) => api.put(`/admin/complaints/${id}/resolve`, data),
-  getMedicines:      ()         => api.get('/admin/medicines'),
-  createMedicine:    (data)     => api.post('/admin/medicines', data),
-  updateMedicine:    (id, data) => api.put(`/admin/medicines/${id}`, data),
-  getOrders:         ()         => api.get('/admin/orders'),
-  updateOrderStatus: (id, data) => api.put(`/admin/orders/${id}/status`, data),
-  getTransactions:   ()         => api.get('/admin/transactions'),
+  getDashboard:      ()         => adminApi.get('/admin/dashboard'),
+  getUsers:          (params)   => adminApi.get('/admin/users', { params }),
+  toggleUserStatus:  (id)       => adminApi.put(`/admin/users/${id}/toggle-status`),
+  deleteUser:        (id)       => adminApi.delete(`/admin/users/${id}`),
+  verifyDoctor:      (id)       => adminApi.post(`/admin/doctors/${id}/verify`),
+  rejectDoctor:      (id, data) => adminApi.post(`/admin/doctors/${id}/reject`, data),
+  getComplaints:     (params)   => adminApi.get('/admin/complaints', { params }),
+  resolveComplaint:  (id, data) => adminApi.put(`/admin/complaints/${id}/resolve`, data),
+  getMedicines:      ()         => adminApi.get('/admin/medicines'),
+  createMedicine:    (data)     => adminApi.post('/admin/medicines', data),
+  updateMedicine:    (id, data) => adminApi.put(`/admin/medicines/${id}`, data),
+  getOrders:         ()         => adminApi.get('/admin/orders'),
+  updateOrderStatus: (id, data) => adminApi.put(`/admin/orders/${id}/status`, data),
+  getTransactions:   ()         => adminApi.get('/admin/transactions'),
+  confirmCodPayment: (id)       => adminApi.post(`/admin/payments/${id}/confirm-cod`),
+  // Newly wired admin actions
+  confirmPayment:    (id)       => adminApi.post(`/admin/payments/${id}/confirm`),
+  refundPayment:     (id, data) => adminApi.post(`/admin/payments/${id}/refund`, data),
+  getDoctorDocument: (id, type) => adminApi.get(`/admin/doctors/${id}/document/${type}`, { responseType: 'blob' }),
 };

@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Plus, Trash2, Save, FileText, ChevronLeft, Download } from 'lucide-react';
+import { Plus, Trash2, Save, FileText, ChevronLeft, Download, Video, MapPin, Info, AlertCircle } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { appointmentAPI, prescriptionAPI } from '../../api/services';
 import { toast } from 'react-toastify';
@@ -108,14 +108,16 @@ export default function WritePrescription() {
           </div>
           <div style={{ marginLeft: 'auto', textAlign: 'right' }}>
             <p style={{ fontSize: 12, color: 'var(--gray-400)' }}>Consultation Type</p>
-            <p style={{ fontSize: 13, fontWeight: 700 }}>{appt?.type === 'video' ? '📹 Video' : '🏥 In-person'}</p>
+            <p style={{ fontSize: 13, fontWeight: 700, display:'flex', alignItems:'center', gap:5 }}>
+              {appt?.type === 'video' ? <><Video size={13}/> Video</> : <><MapPin size={13}/> In-person</>}
+            </p>
           </div>
         </div>
 
         {/* Already written notice */}
         {existing && (
           <div className="wp-notice wp-notice-info">
-            ℹ️ A prescription has already been written for this appointment. Shown below (read-only).
+            <Info size={14}/> A prescription has already been written for this appointment. Shown below (read-only).
           </div>
         )}
 

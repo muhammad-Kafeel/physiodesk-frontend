@@ -1,17 +1,21 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { Calendar, ShoppingBag, FileText, Activity, ChevronRight, Clock, CheckCircle, XCircle, AlertCircle, User } from 'lucide-react';
+import {
+  Calendar, ShoppingBag, FileText, Activity, ChevronRight,
+  Clock, CheckCircle, XCircle, AlertCircle, User, Stethoscope,
+  Pill, ClipboardList, Folder, BookOpen
+} from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { appointmentAPI, patientAPI } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
 import './PatientDashboard.css';
 
 const STATUS_STYLE = {
-  pending:     { bg:'#FEF9C3', color:'#CA8A04', icon:<Clock size={13}/> },
-  confirmed:   { bg:'#DCFCE7', color:'#16A34A', icon:<CheckCircle size={13}/> },
-  completed:   { bg:'#DBEAFE', color:'#2563EB', icon:<CheckCircle size={13}/> },
-  cancelled:   { bg:'#FEE2E2', color:'#DC2626', icon:<XCircle size={13}/> },
-  rescheduled: { bg:'#FEF9C3', color:'#CA8A04', icon:<Clock size={13}/> },
+  pending:     { bg:'var(--warning-light)', color:'var(--warning)',  icon:<Clock size={13}/> },
+  confirmed:   { bg:'var(--success-light)', color:'var(--success)',  icon:<CheckCircle size={13}/> },
+  completed:   { bg:'var(--info-light)',    color:'var(--info)',     icon:<CheckCircle size={13}/> },
+  cancelled:   { bg:'var(--danger-light)', color:'var(--danger)',   icon:<XCircle size={13}/> },
+  rescheduled: { bg:'var(--warning-light)', color:'var(--warning)',  icon:<Clock size={13}/> },
 };
 
 export default function PatientDashboard() {
@@ -37,7 +41,7 @@ export default function PatientDashboard() {
     <Layout>
       <div className="pd-container pd-section">
 
-        {/* ── 1. Complete Profile Banner (TOP — only if incomplete) ── */}
+        {/* ── 1. Profile Incomplete Reminder ── */}
         {!profile && !loading && (
           <div className="pdb-profile-reminder pdb-profile-reminder-top">
             <div className="pdb-reminder-icon-wrap">
@@ -58,7 +62,7 @@ export default function PatientDashboard() {
         {/* ── 2. Welcome Banner ── */}
         <div className="pdb-banner">
           <div>
-            <h1 className="pdb-welcome">Welcome back, {user?.name?.split(' ')[0]}! 👋</h1>
+            <h1 className="pdb-welcome">Welcome back, {user?.name?.split(' ')[0]}!</h1>
             <p className="pdb-sub">Manage your health journey from your personal dashboard</p>
           </div>
           <Link to="/doctors" className="btn-primary-pd">Book New Appointment</Link>
@@ -67,15 +71,15 @@ export default function PatientDashboard() {
         {/* ── 3. Stats ── */}
         <div className="pdb-stats">
           {[
-            { label:'Total Appointments', value: appts.length,                       icon:<Calendar size={20}/>,    bg:'#EFF6FF', color:'var(--primary)' },
-            { label:'Completed',          value: completed,                           icon:<CheckCircle size={20}/>, bg:'#DCFCE7', color:'#16A34A' },
-            { label:'Upcoming',           value: upcoming.length,                     icon:<Clock size={20}/>,       bg:'#FEF9C3', color:'#CA8A04' },
-            { label:'Profile',            value: profile ? 'Complete' : 'Incomplete', icon:<Activity size={20}/>,   bg:'#FDF4FF', color: profile ? '#7C3AED' : '#DC2626' },
+            { label:'Total Appointments', value: appts.length,                       icon:<Calendar size={20}/>,    bg:'var(--primary-light)',  color:'var(--primary)' },
+            { label:'Completed',          value: completed,                           icon:<CheckCircle size={20}/>, bg:'var(--success-light)',  color:'var(--success)' },
+            { label:'Upcoming',           value: upcoming.length,                     icon:<Clock size={20}/>,       bg:'var(--warning-light)', color:'var(--warning)' },
+            { label:'Profile Status',     value: profile ? 'Complete' : 'Incomplete', icon:<Activity size={20}/>,   bg:'var(--info-light)',     color: profile ? 'var(--info)' : 'var(--danger)' },
           ].map((s, i) => (
             <div key={i} className="pdb-stat-card">
               <div className="pdb-stat-icon" style={{ background:s.bg, color:s.color }}>{s.icon}</div>
               <div>
-                <p className="pdb-stat-val" style={!profile && i === 3 ? { color:'#DC2626' } : {}}>{s.value}</p>
+                <p className="pdb-stat-val" style={!profile && i === 3 ? { color:'var(--danger)' } : {}}>{s.value}</p>
                 <p className="pdb-stat-label">{s.label}</p>
               </div>
             </div>
@@ -94,9 +98,9 @@ export default function PatientDashboard() {
             {loading ? <div className="pd-spinner" /> :
               upcoming.length === 0 ? (
                 <div className="pd-empty">
-                  <p style={{ fontSize:36 }}>📅</p>
+                  <Calendar size={40}/>
                   <p>No upcoming appointments</p>
-                  <Link to="/doctors" className="btn-primary-pd" style={{ marginTop:12 }}>Book Now</Link>
+                  <Link to="/doctors" className="btn-primary-pd" style={{ marginTop:14 }}>Book Now</Link>
                 </div>
               ) : (
                 <div className="pdb-appt-list">
@@ -108,7 +112,7 @@ export default function PatientDashboard() {
                         <div className="pdb-appt-info">
                           <p className="pdb-appt-doc">Dr. {a.doctor?.user?.name}</p>
                           <p className="pdb-appt-spec">{a.doctor?.specialization}</p>
-                          <p className="pdb-appt-time">{a.appointment_date} · {a.appointment_time}</p>
+                          <p className="pdb-appt-time">{a.appointment_date} &middot; {a.appointment_time}</p>
                         </div>
                         <span className="pdb-appt-status" style={{ background:s.bg, color:s.color }}>
                           {s.icon} {a.status}
@@ -126,12 +130,12 @@ export default function PatientDashboard() {
             <p className="pd-section-title" style={{ marginBottom:16 }}>Quick Access</p>
             <div className="pdb-quick-links">
               {[
-                { to:'/patient/prescriptions',   icon:<FileText size={20}/>,    label:'My Prescriptions', sub:'View & download',   bg:'#EFF6FF', color:'var(--primary)' },
-                { to:'/pharmacy',                icon:<ShoppingBag size={20}/>, label:'Order Medicines',  sub:'OTC & Rx',           bg:'#F0FDFA', color:'var(--teal)' },
-                { to:'/patient/orders',          icon:<ShoppingBag size={20}/>, label:'My Orders',        sub:'Track deliveries',   bg:'#FFF7ED', color:'#D97706' },
-                { to:'/patient/medical-records', icon:<Activity size={20}/>,    label:'Medical Records',  sub:'Your health vault',  bg:'#FDF4FF', color:'#7C3AED' },
-                { to:'/blogs',                   icon:<FileText size={20}/>,    label:'Health Blogs',     sub:'Tips & articles',    bg:'#F0FDF4', color:'#16A34A' },
-                { to:'/patient/complaints',      icon:<AlertCircle size={20}/>, label:'Complaints',       sub:'File or view',       bg:'#FEF2F2', color:'#DC2626' },
+                { to:'/patient/prescriptions',   icon:<Pill size={20}/>,        label:'My Prescriptions', sub:'View & download',   bg:'var(--primary-light)',  color:'var(--primary)' },
+                { to:'/pharmacy',                icon:<ShoppingBag size={20}/>,  label:'Order Medicines',  sub:'OTC & Rx delivery', bg:'var(--teal-light)',     color:'var(--teal)' },
+                { to:'/patient/orders',          icon:<ShoppingBag size={20}/>,  label:'My Orders',        sub:'Track deliveries',   bg:'#FFF7ED',              color:'#D97706' },
+                { to:'/patient/medical-records', icon:<ClipboardList size={20}/>,label:'Medical Records',  sub:'Your health vault',  bg:'#F5F3FF',              color:'#7C3AED' },
+                { to:'/blogs',                   icon:<BookOpen size={20}/>,     label:'Health Blogs',     sub:'Tips & articles',    bg:'var(--success-light)', color:'var(--success)' },
+                { to:'/patient/complaints',      icon:<AlertCircle size={20}/>,  label:'Complaints',       sub:'File or view',       bg:'var(--danger-light)',  color:'var(--danger)' },
               ].map(item => (
                 <Link key={item.to + item.label} to={item.to} className="pdb-quick-item">
                   <div className="pdb-quick-icon" style={{ background:item.bg, color:item.color }}>{item.icon}</div>
@@ -139,7 +143,7 @@ export default function PatientDashboard() {
                     <p className="pdb-quick-label">{item.label}</p>
                     <p className="pdb-quick-sub">{item.sub}</p>
                   </div>
-                  <ChevronRight size={16} color="var(--gray-400)" style={{ marginLeft:'auto' }} />
+                  <ChevronRight size={16} color="var(--gray-300)" style={{ marginLeft:'auto' }} />
                 </Link>
               ))}
             </div>
