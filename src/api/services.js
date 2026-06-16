@@ -90,6 +90,7 @@ export const pharmacyAPI = {
   placeOrder:            (data)     => patientApi.post('/orders', data),
   orderFromPrescription: (id, data) => patientApi.post(`/orders/from-prescription/${id}`, data),
   previewPrescription:   (id)       => patientApi.get(`/orders/prescription-preview/${id}`),
+  cancelOrder:           (id, data) => patientApi.post(`/patient/orders/${id}/cancel`, data),
 };
 
 export const paymentAPI = {
@@ -115,7 +116,7 @@ export const complaintAPI = {
   list:   ()         => getApi().get('/complaints'),
   store:  (data)     => getApi().post('/complaints', data),
   update: (id, data) => getApi().put(`/complaints/${id}`, data),
-  delete: (id)       => patientApi.delete(`/complaints/${id}`),
+  delete: (id)       => getApi().delete(`/complaints/${id}`),
 };
 
 export const blogAPI = {

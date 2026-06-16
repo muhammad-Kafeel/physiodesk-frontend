@@ -1,15 +1,20 @@
 import { useState, useEffect } from 'react';
-import { Save, Upload, User, Phone, MapPin, Heart, AlertCircle, Users } from 'lucide-react';
-import { useSearchParams } from 'react-router-dom';
+import { Save, Upload, User, Phone, MapPin, Heart, AlertCircle, Users, CheckCircle2 } from 'lucide-react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import DashboardLayout from '../../components/layout/DashboardLayout';
 import { patientAPI } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
+import { storageUrl } from '../../utils/helpers';
+import { validatePakistaniPhone } from '../../utils/validation';
 import { toast } from 'react-toastify';
 import './PatientProfile.css';
 
 const BLOOD_GROUPS = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+const STEPS = ['personal', 'medical', 'emergency'];
+const STEP_LABELS = { personal: 'Personal Info', medical: 'Medical Info', emergency: 'Emergency Contact' };
 
 const EMPTY_FORM = {
+  date_of_birth: '', gender: '',
   phone: '', city: '', address: '',
   blood_group: '', weight: '', height: '',
   allergies: '', chronic_diseases: '',
@@ -17,9 +22,11 @@ const EMPTY_FORM = {
 };
 
 export default function PatientProfile() {
-  const { user } = useAuth();
-  const [searchParams]         = useSearchParams();
-  const isWelcome              = searchParams.get('welcome') === '1';
+  const { user }       = useAuth();
+  const navigate       = useNavigate();
+  const [searchParams] = useSearchParams();
+  const isWelcome      = searchParams.get('welcome') === '1';
+
   const [profile,      setProfile]      = useState(null);
   const [loading,      setLoading]      = useState(true);
   const [saving,       setSaving]       = useState(false);
@@ -27,6 +34,10 @@ export default function PatientProfile() {
   const [photoFile,    setPhotoFile]    = useState(null);
   const [photoPreview, setPhotoPreview] = useState(null);
   const [form,         setForm]         = useState(EMPTY_FORM);
+  const [errors,       setErrors]       = useState({});
+
+  // First-time = no profile row yet. Drives the stepper auto-advance & "Continue" button.
+  const isFirstTime = !profile;
 
   const loadProfile = () => {
     setLoading(true);
@@ -36,6 +47,8 @@ export default function PatientProfile() {
         setProfile(p);
         if (p) {
           setForm({
+            date_of_birth:           p.date_of_birth           || '',
+            gender:                  p.gender                  || '',
             phone:                   p.phone                   || '',
             city:                    p.city                    || '',
             address:                 p.address                 || '',
@@ -55,7 +68,10 @@ export default function PatientProfile() {
 
   useEffect(() => { loadProfile(); }, []);
 
-  const f = (key, val) => setForm(p => ({ ...p, [key]: val }));
+  const f = (key, val) => {
+    setForm(p => ({ ...p, [key]: val }));
+    if (errors[key]) setErrors(p => ({ ...p, [key]: null }));
+  };
 
   const handlePhoto = (e) => {
     const file = e.target.files[0];
@@ -64,46 +80,142 @@ export default function PatientProfile() {
     setPhotoPreview(URL.createObjectURL(file));
   };
 
-  const save = async (e) => {
+  // ── Per-step validation ────────────────────────────────────────────────────
+  // Returns { ok: bool, errors: {field: msg} }.
+  // On first-time creation, personal step is strict (DOB/gender/phone required by backend).
+  // On returning visits, fields are individually editable so we just validate filled ones.
+  const validateStep = (step) => {
+    const e = {};
+    if (step === 'personal') {
+      // DOB & gender are backend-required on CREATE only. On update they're not editable
+      // anyway (we lock them in UI), so only check during first-time.
+      if (isFirstTime) {
+        if (!form.date_of_birth) e.date_of_birth = 'Date of birth is required';
+        if (!form.gender)        e.gender        = 'Gender is required';
+      }
+      // Phone is optional in the schema, but if provided it must match PK format.
+      // On first-time we require it because doctors need to reach the patient.
+      const phoneErr = validatePakistaniPhone(form.phone, { required: isFirstTime });
+      if (phoneErr) e.phone = phoneErr;
+    }
+    if (step === 'emergency') {
+      // If user fills name OR phone, both should be present + valid.
+      const hasName  = !!form.emergency_contact_name?.trim();
+      const hasPhone = !!form.emergency_contact_phone?.trim();
+      if (hasName && !hasPhone) e.emergency_contact_phone = 'Emergency phone is required';
+      if (hasPhone && !hasName) e.emergency_contact_name  = 'Emergency contact name is required';
+      if (hasPhone) {
+        const ph = validatePakistaniPhone(form.emergency_contact_phone, { required: true });
+        if (ph) e.emergency_contact_phone = ph;
+      }
+    }
+    return { ok: Object.keys(e).length === 0, errors: e };
+  };
+
+  // ── Save logic ─────────────────────────────────────────────────────────────
+  // First-time: each step does its own save. Personal step creates the profile row
+  // (POST), subsequent steps PATCH it. After Emergency, redirect to dashboard.
+  // Returning user: every "Save Changes" PUTs the current form and stays on the tab.
+  const saveAndAdvance = async (e) => {
     e.preventDefault();
+    const { ok, errors: stepErrors } = validateStep(activeTab);
+    if (!ok) {
+      setErrors(stepErrors);
+      const firstMsg = Object.values(stepErrors)[0];
+      if (firstMsg) toast.error(firstMsg);
+      return;
+    }
+
     setSaving(true);
     try {
-      if (profile) {
-        // If there's a new photo, use FormData; otherwise JSON PUT is fine
+      if (isFirstTime) {
+        // First-time flow — on the FIRST step we POST (create); after that we PUT.
+        // We always send the full form so partial data is preserved server-side.
+        const isCreating = !profile;
+
+        if (isCreating) {
+          // Create requires date_of_birth + gender; we've validated those above.
+          const fd = new FormData();
+          Object.entries(form).forEach(([k, v]) => {
+            if (v !== '' && v !== null) fd.append(k, v);
+          });
+          if (photoFile) fd.append('profile_photo', photoFile);
+          await patientAPI.createProfile(fd);
+        } else {
+          // Subsequent step in first-time flow → PUT (no DOB/gender change).
+          if (photoFile) {
+            const fd = new FormData();
+            Object.entries(form).forEach(([k, v]) => {
+              // DOB & gender are locked after creation
+              if (k === 'date_of_birth' || k === 'gender') return;
+              if (v !== '' && v !== null) fd.append(k, v);
+            });
+            fd.append('profile_photo', photoFile);
+            fd.append('_method', 'PUT');
+            await patientAPI.updateProfileWithPhoto(fd);
+          } else {
+            const payload = { ...form };
+            delete payload.date_of_birth;
+            delete payload.gender;
+            await patientAPI.updateProfile(payload);
+          }
+        }
+
+        // Advance to next step OR finish
+        const idx = STEPS.indexOf(activeTab);
+        const last = idx === STEPS.length - 1;
+        if (last) {
+          toast.success('Profile complete! 🎉');
+          // Reload then redirect to dashboard
+          await new Promise(r => setTimeout(r, 300));
+          navigate('/patient/dashboard');
+          return;
+        } else {
+          toast.success(`${STEP_LABELS[activeTab]} saved`);
+          setPhotoFile(null);
+          // Reload profile so isFirstTime flips to false after step 1
+          loadProfile();
+          setActiveTab(STEPS[idx + 1]);
+        }
+      } else {
+        // Returning user — single save, stay on the current tab.
         if (photoFile) {
           const fd = new FormData();
-          Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v); });
+          Object.entries(form).forEach(([k, v]) => {
+            if (k === 'date_of_birth' || k === 'gender') return;
+            if (v !== '' && v !== null) fd.append(k, v);
+          });
           fd.append('profile_photo', photoFile);
           fd.append('_method', 'PUT');
-          // POST with _method spoofing for multipart
           await patientAPI.updateProfileWithPhoto(fd);
         } else {
-          await patientAPI.updateProfile(form);
+          const payload = { ...form };
+          delete payload.date_of_birth;
+          delete payload.gender;
+          await patientAPI.updateProfile(payload);
         }
         toast.success('Profile updated successfully!');
-      } else {
-        // Create — needs date_of_birth & gender (required by backend)
-        const fd = new FormData();
-        Object.entries(form).forEach(([k, v]) => { if (v !== '') fd.append(k, v); });
-        fd.append('date_of_birth', '2000-01-01');
-        fd.append('gender', 'male');
-        if (photoFile) fd.append('profile_photo', photoFile);
-        await patientAPI.createProfile(fd);
-        toast.success('Profile created!');
+        setPhotoFile(null);
+        loadProfile();
       }
-      setPhotoFile(null);
-      loadProfile();
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to save profile');
+      // Surface backend field errors inline.
+      const apiErrors = err.response?.data?.errors;
+      if (apiErrors) {
+        const flat = {};
+        Object.entries(apiErrors).forEach(([k, v]) => { flat[k] = Array.isArray(v) ? v[0] : v; });
+        setErrors(flat);
+        toast.error(Object.values(flat)[0] || 'Please fix the errors below');
+      } else {
+        toast.error(err.response?.data?.message || 'Failed to save profile');
+      }
     } finally {
       setSaving(false);
     }
   };
 
   const photoSrc = photoPreview
-    || (profile?.profile_photo
-      ? `http://localhost:8000/storage/${profile.profile_photo}`
-      : null);
+    || (profile?.profile_photo ? storageUrl(profile.profile_photo) : null);
 
   const bmi = form.weight && form.height
     ? (Number(form.weight) / Math.pow(Number(form.height) / 100, 2)).toFixed(1)
@@ -116,6 +228,18 @@ export default function PatientProfile() {
     :              { text: 'Obese',        color: '#DC2626' }
     : null;
 
+  // Stepper progress (only meaningful during first-time flow; for returning users
+  // we still show a progress bar that reflects how complete their profile is).
+  const completedSteps = (() => {
+    if (isFirstTime) return STEPS.indexOf(activeTab); // 0/1/2
+    let c = 0;
+    if (form.phone && form.city && form.date_of_birth) c++;
+    if (form.blood_group || form.weight || form.height) c++;
+    if (form.emergency_contact_name && form.emergency_contact_phone) c++;
+    return c;
+  })();
+  const progressPct = Math.round((completedSteps / STEPS.length) * 100);
+
   if (loading) return (
     <DashboardLayout>
       <div className="pd-spinner" style={{ marginTop: 80 }} />
@@ -127,7 +251,7 @@ export default function PatientProfile() {
       <div className="pp-wrap">
 
         {/* Welcome banner for new registrations */}
-        {isWelcome && (
+        {isWelcome && isFirstTime && (
           <div style={{
             background: 'linear-gradient(135deg, #1D4ED8, #0369A1)',
             borderRadius: 14, padding: '20px 24px',
@@ -140,23 +264,8 @@ export default function PatientProfile() {
                 🎉 Welcome to PhysioDesk, {user?.name?.split(' ')[0]}!
               </p>
               <p style={{ fontSize: 13, opacity: .85 }}>
-                Complete your health profile below so doctors can give you the best care.
-                It only takes 2 minutes.
+                Complete these 3 short steps so doctors can give you the best care.
               </p>
-            </div>
-            <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
-              <div style={{ textAlign: 'center', background: 'rgba(255,255,255,.15)', borderRadius: 10, padding: '10px 18px' }}>
-                <p style={{ fontSize: 20, fontWeight: 800 }}>1</p>
-                <p style={{ fontSize: 11, opacity: .8 }}>Complete profile</p>
-              </div>
-              <div style={{ textAlign: 'center', background: 'rgba(255,255,255,.15)', borderRadius: 10, padding: '10px 18px' }}>
-                <p style={{ fontSize: 20, fontWeight: 800 }}>2</p>
-                <p style={{ fontSize: 11, opacity: .8 }}>Find a doctor</p>
-              </div>
-              <div style={{ textAlign: 'center', background: 'rgba(255,255,255,.15)', borderRadius: 10, padding: '10px 18px' }}>
-                <p style={{ fontSize: 20, fontWeight: 800 }}>3</p>
-                <p style={{ fontSize: 11, opacity: .8 }}>Book appointment</p>
-              </div>
             </div>
           </div>
         )}
@@ -165,6 +274,79 @@ export default function PatientProfile() {
         <div className="pp-header">
           <h1 className="pp-title">My Profile</h1>
           <p className="pp-sub">Manage your personal and medical information</p>
+        </div>
+
+        {/* ── Stepper / Progress ─────────────────────────────────────────────── */}
+        <div className="pp-stepper" style={{
+          background: 'white', borderRadius: 12,
+          padding: '20px 24px', marginBottom: 20,
+          border: '1px solid var(--gray-200)', boxShadow: 'var(--shadow-sm)',
+        }}>
+          <div style={{
+            display: 'flex', justifyContent: 'space-between',
+            alignItems: 'center', marginBottom: 14,
+          }}>
+            <p style={{ fontSize: 13, fontWeight: 700, color: 'var(--gray-700)' }}>
+              {isFirstTime
+                ? `Step ${STEPS.indexOf(activeTab) + 1} of ${STEPS.length}`
+                : 'Profile Completion'}
+            </p>
+            <p style={{ fontSize: 13, fontWeight: 700, color: progressPct === 100 ? '#16A34A' : 'var(--primary)' }}>
+              {progressPct}%
+            </p>
+          </div>
+
+          {/* Progress bar */}
+          <div style={{
+            height: 6, background: 'var(--gray-100)',
+            borderRadius: 99, overflow: 'hidden', marginBottom: 14,
+          }}>
+            <div style={{
+              height: '100%',
+              width: `${progressPct}%`,
+              background: progressPct === 100
+                ? 'linear-gradient(90deg, #16A34A, #22C55E)'
+                : 'linear-gradient(90deg, var(--primary), #38BDF8)',
+              transition: 'width .4s ease',
+            }} />
+          </div>
+
+          {/* Step dots */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', position: 'relative' }}>
+            {STEPS.map((s, i) => {
+              const done    = i < completedSteps;
+              const current = activeTab === s;
+              return (
+                <div key={s} style={{
+                  display: 'flex', flexDirection: 'column', alignItems: 'center',
+                  flex: 1, cursor: isFirstTime && !done && !current ? 'not-allowed' : 'pointer',
+                  opacity: isFirstTime && i > STEPS.indexOf(activeTab) ? 0.5 : 1,
+                }}
+                onClick={() => {
+                  // On first-time, prevent skipping ahead. On returning user, free navigation.
+                  if (!isFirstTime || i <= STEPS.indexOf(activeTab)) setActiveTab(s);
+                }}>
+                  <div style={{
+                    width: 28, height: 28, borderRadius: '50%',
+                    display: 'flex', alignItems: 'center', justifyContent: 'center',
+                    background: done ? '#16A34A' : current ? 'var(--primary)' : 'var(--gray-200)',
+                    color: done || current ? 'white' : 'var(--gray-400)',
+                    fontWeight: 800, fontSize: 12, marginBottom: 6,
+                    transition: 'all .25s',
+                  }}>
+                    {done ? <CheckCircle2 size={16} /> : i + 1}
+                  </div>
+                  <p style={{
+                    fontSize: 11, fontWeight: current ? 700 : 600,
+                    color: current ? 'var(--primary)' : done ? '#16A34A' : 'var(--gray-500)',
+                    textAlign: 'center',
+                  }}>
+                    {STEP_LABELS[s]}
+                  </p>
+                </div>
+              );
+            })}
+          </div>
         </div>
 
         {/* Hero card */}
@@ -197,7 +379,7 @@ export default function PatientProfile() {
                   BMI {bmi} · {bmiLabel.text}
                 </span>
               )}
-              {!profile && (
+              {isFirstTime && (
                 <span className="pp-badge pp-badge-warn">⚠️ Profile incomplete</span>
               )}
             </div>
@@ -207,7 +389,7 @@ export default function PatientProfile() {
             {[
               { label: 'Height', value: form.height ? `${form.height} cm` : '—' },
               { label: 'Weight', value: form.weight ? `${form.weight} kg` : '—' },
-              { label: 'Blood', value: form.blood_group || '—' },
+              { label: 'Blood',  value: form.blood_group || '—' },
             ].map((s, i) => (
               <div key={i} className="pp-stat-box">
                 <p className="pp-stat-val">{s.value}</p>
@@ -217,22 +399,27 @@ export default function PatientProfile() {
           </div>
         </div>
 
-        {/* Tabs */}
+        {/* Tabs — disabled-styled on first-time when ahead of current step */}
         <div className="pp-tabs">
-          {[
-            { key: 'personal',  label: '👤 Personal Info' },
-            { key: 'medical',   label: '❤️ Medical Info' },
-            { key: 'emergency', label: '🆘 Emergency Contact' },
-          ].map(t => (
-            <button key={t.key}
-              className={`pp-tab ${activeTab === t.key ? 'active' : ''}`}
-              onClick={() => setActiveTab(t.key)}>
-              {t.label}
-            </button>
-          ))}
+          {STEPS.map((s, i) => {
+            const disabled = isFirstTime && i > STEPS.indexOf(activeTab);
+            return (
+              <button key={s}
+                type="button"
+                className={`pp-tab ${activeTab === s ? 'active' : ''}`}
+                disabled={disabled}
+                style={disabled ? { opacity: 0.5, cursor: 'not-allowed' } : {}}
+                onClick={() => !disabled && setActiveTab(s)}>
+                {s === 'personal'  && '👤 '}
+                {s === 'medical'   && '❤️ '}
+                {s === 'emergency' && '🆘 '}
+                {STEP_LABELS[s]}
+              </button>
+            );
+          })}
         </div>
 
-        <form onSubmit={save}>
+        <form onSubmit={saveAndAdvance}>
           <div className="pp-form-card">
 
             {/* ── Personal Info ── */}
@@ -257,11 +444,57 @@ export default function PatientProfile() {
                 <div className="pp-divider" />
 
                 <div className="pp-grid-2">
+                  {/* DOB */}
                   <div className="pp-field">
-                    <label className="pp-label"><Phone size={13} /> Phone Number</label>
-                    <input className="pp-input" value={form.phone}
+                    <label className="pp-label">📅 Date of Birth {isFirstTime && '*'}</label>
+                    <input
+                      className="pp-input"
+                      type="date"
+                      value={form.date_of_birth}
+                      disabled={!isFirstTime}
+                      max={new Date(new Date().setFullYear(new Date().getFullYear() - 1))
+                        .toISOString().split('T')[0]}
+                      onChange={e => f('date_of_birth', e.target.value)}
+                      style={errors.date_of_birth ? { borderColor: '#DC2626' } : {}}
+                    />
+                    {errors.date_of_birth && <p className="pp-hint" style={{ color: '#DC2626' }}>{errors.date_of_birth}</p>}
+                    {!isFirstTime && <p className="pp-hint">Locked after creation. Contact support to change.</p>}
+                  </div>
+
+                  {/* Gender */}
+                  <div className="pp-field">
+                    <label className="pp-label">👤 Gender {isFirstTime && '*'}</label>
+                    <select
+                      className="pp-input"
+                      value={form.gender}
+                      disabled={!isFirstTime}
+                      onChange={e => f('gender', e.target.value)}
+                      style={errors.gender ? { borderColor: '#DC2626' } : {}}
+                    >
+                      <option value="">Select gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                    </select>
+                    {errors.gender && <p className="pp-hint" style={{ color: '#DC2626' }}>{errors.gender}</p>}
+                    {!isFirstTime && <p className="pp-hint">Locked after creation. Contact support to change.</p>}
+                  </div>
+                </div>
+
+                <div className="pp-grid-2" style={{ marginTop: 16 }}>
+                  <div className="pp-field">
+                    <label className="pp-label"><Phone size={13} /> Phone Number {isFirstTime && '*'}</label>
+                    <input
+                      className="pp-input"
+                      value={form.phone}
                       onChange={e => f('phone', e.target.value)}
-                      placeholder="+92 3XX XXXXXXX" />
+                      placeholder="+923001234567 or 03001234567"
+                      style={errors.phone ? { borderColor: '#DC2626' } : {}}
+                    />
+                    {errors.phone
+                      ? <p className="pp-hint" style={{ color: '#DC2626' }}>{errors.phone}</p>
+                      : <p className="pp-hint">Pakistani mobile only — used for appointment alerts.</p>
+                    }
                   </div>
                   <div className="pp-field">
                     <label className="pp-label"><MapPin size={13} /> City</label>
@@ -374,15 +607,26 @@ export default function PatientProfile() {
                 <div className="pp-grid-2">
                   <div className="pp-field">
                     <label className="pp-label">Contact Name</label>
-                    <input className="pp-input" value={form.emergency_contact_name}
+                    <input className="pp-input"
+                      value={form.emergency_contact_name}
                       onChange={e => f('emergency_contact_name', e.target.value)}
-                      placeholder="Full name of emergency contact" />
+                      placeholder="Full name of emergency contact"
+                      style={errors.emergency_contact_name ? { borderColor: '#DC2626' } : {}} />
+                    {errors.emergency_contact_name && (
+                      <p className="pp-hint" style={{ color: '#DC2626' }}>{errors.emergency_contact_name}</p>
+                    )}
                   </div>
                   <div className="pp-field">
                     <label className="pp-label">Contact Phone</label>
-                    <input className="pp-input" value={form.emergency_contact_phone}
+                    <input className="pp-input"
+                      value={form.emergency_contact_phone}
                       onChange={e => f('emergency_contact_phone', e.target.value)}
-                      placeholder="+92 3XX XXXXXXX" />
+                      placeholder="+923001234567 or 03001234567"
+                      style={errors.emergency_contact_phone ? { borderColor: '#DC2626' } : {}} />
+                    {errors.emergency_contact_phone
+                      ? <p className="pp-hint" style={{ color: '#DC2626' }}>{errors.emergency_contact_phone}</p>
+                      : <p className="pp-hint">Pakistani mobile only.</p>
+                    }
                   </div>
                 </div>
 
@@ -401,12 +645,16 @@ export default function PatientProfile() {
               </div>
             )}
 
-            {/* Save */}
+            {/* Save / Continue button */}
             <div className="pp-form-footer">
               <button type="submit" className="btn-primary-pd" disabled={saving}>
                 {saving
                   ? <span className="auth-spinner" />
-                  : <><Save size={15} /> {profile ? 'Save Changes' : 'Create Profile'}</>
+                  : isFirstTime
+                    ? activeTab === 'emergency'
+                      ? <><CheckCircle2 size={15} /> Finish Setup</>
+                      : <><Save size={15} /> Save &amp; Continue</>
+                    : <><Save size={15} /> Save Changes</>
                 }
               </button>
             </div>

@@ -71,18 +71,18 @@ export default function PatientDashboard() {
         {/* ── 3. Stats ── */}
         <div className="pdb-stats">
           {[
-            { label:'Total Appointments', value: appts.length,                       icon:<Calendar size={20}/>,    bg:'var(--primary-light)',  color:'var(--primary)' },
-            { label:'Completed',          value: completed,                           icon:<CheckCircle size={20}/>, bg:'var(--success-light)',  color:'var(--success)' },
-            { label:'Upcoming',           value: upcoming.length,                     icon:<Clock size={20}/>,       bg:'var(--warning-light)', color:'var(--warning)' },
-            { label:'Profile Status',     value: profile ? 'Complete' : 'Incomplete', icon:<Activity size={20}/>,   bg:'var(--info-light)',     color: profile ? 'var(--info)' : 'var(--danger)' },
+            { label:'Total Appointments', value: appts.length,                       icon:<Calendar size={20}/>,    bg:'var(--primary-light)',  color:'var(--primary)', to:'/patient/appointments' },
+            { label:'Completed',          value: completed,                           icon:<CheckCircle size={20}/>, bg:'var(--success-light)',  color:'var(--success)', to:'/patient/appointments' },
+            { label:'Upcoming',           value: upcoming.length,                     icon:<Clock size={20}/>,       bg:'var(--warning-light)', color:'var(--warning)', to:'/patient/appointments' },
+            { label:'Profile Status',     value: profile ? 'Complete' : 'Incomplete', icon:<Activity size={20}/>,   bg:'var(--info-light)',     color: profile ? 'var(--info)' : 'var(--danger)', to:'/patient/profile' },
           ].map((s, i) => (
-            <div key={i} className="pdb-stat-card">
+            <Link key={i} to={s.to} className="pdb-stat-card" style={{textDecoration:'none',cursor:'pointer'}}>
               <div className="pdb-stat-icon" style={{ background:s.bg, color:s.color }}>{s.icon}</div>
               <div>
                 <p className="pdb-stat-val" style={!profile && i === 3 ? { color:'var(--danger)' } : {}}>{s.value}</p>
                 <p className="pdb-stat-label">{s.label}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

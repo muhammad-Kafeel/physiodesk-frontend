@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Mail, Lock, User, Phone, Eye, EyeOff } from 'lucide-react';
 import { usePatientAuth } from '../../context/AuthContext';
 import { patientAuthAPI } from '../../api/services';
+import { validatePakistaniPhone, validateEmail } from '../../utils/validation';
 import { toast } from 'react-toastify';
 import './AuthPages.css';
 
@@ -13,13 +14,35 @@ export default function PatientRegisterPage() {
   });
   const [show,    setShow]    = useState(false);
   const [loading, setLoading] = useState(false);
+  const [phoneError, setPhoneError] = useState('');
+  const [emailError, setEmailError] = useState('');
   const { login } = usePatientAuth();
   const navigate  = useNavigate();
 
-  const handle = e => setForm(p => ({ ...p, [e.target.name]: e.target.value }));
+  const handle = e => {
+    const { name, value } = e.target;
+    setForm(p => ({ ...p, [name]: value }));
+    // Live-clear field errors while user is correcting them.
+    if (name === 'phone' && phoneError) setPhoneError('');
+    if (name === 'email' && emailError) setEmailError('');
+  };
 
   const submit = async e => {
     e.preventDefault();
+    // Block invalid email before hitting the API.
+    const emailErr = validateEmail(form.email, { required: true });
+    if (emailErr) {
+      setEmailError(emailErr);
+      toast.error(emailErr);
+      return;
+    }
+    // Block invalid Pakistani phone before hitting the API (defence in depth — backend also validates).
+    const phoneErr = validatePakistaniPhone(form.phone, { required: true });
+    if (phoneErr) {
+      setPhoneError(phoneErr);
+      toast.error(phoneErr);
+      return;
+    }
     if (form.password !== form.password_confirmation) {
       toast.error('Passwords do not match'); return;
     }
@@ -73,18 +96,33 @@ export default function PatientRegisterPage() {
                 <Mail size={14} className="ap-input-icon" />
                 <input className="ap-input" name="email" type="email"
                   value={form.email} onChange={handle}
-                  placeholder="you@example.com" required autoComplete="email" />
+                  placeholder="you@example.com" required autoComplete="email"
+                  style={emailError ? { borderColor: '#DC2626' } : {}} />
               </div>
+              {emailError && (
+                <p style={{ fontSize: 11, color: '#DC2626', marginTop: 4 }}>{emailError}</p>
+              )}
             </div>
 
             <div className="ap-field">
-              <label className="ap-label">Phone <span style={{ fontWeight: 400, color: '#9CA3AF' }}>(optional)</span></label>
+              <label className="ap-label">Phone</label>
               <div className="ap-input-wrap">
                 <Phone size={14} className="ap-input-icon" />
-                <input className="ap-input" name="phone" type="tel"
+                <input
+                  className="ap-input"
+                  name="phone" type="tel"
                   value={form.phone} onChange={handle}
-                  placeholder="+92-300-0000000" />
+                  placeholder="+923001234567 or 03001234567"
+                  required
+                  style={phoneError ? { borderColor: '#DC2626' } : {}}
+                />
               </div>
+              {phoneError
+                ? <p style={{ fontSize: 11, color: '#DC2626', marginTop: 4 }}>{phoneError}</p>
+                : <p style={{ fontSize: 11, color: '#9CA3AF', marginTop: 4 }}>
+                    Pakistani mobile only — used for appointment updates.
+                  </p>
+              }
             </div>
 
             <div className="ap-row">

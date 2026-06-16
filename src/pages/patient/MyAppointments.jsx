@@ -1,8 +1,8 @@
-﻿import { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, Video, ChevronRight, MapPin } from "lucide-react";
+import { Calendar, Clock, Video, ChevronRight, MapPin, Star, X, RefreshCw } from "lucide-react";
 import Layout from "../../components/layout/Layout";
-import { appointmentAPI } from "../../api/services";
+import { appointmentAPI, reviewAPI } from "../../api/services";
 import { ListSkeleton } from "../../components/common/Skeleton";
 import { toast } from "react-toastify";
 import "./MyAppointments.css";
@@ -17,32 +17,144 @@ const STATUS_STYLE = {
   rescheduled: { bg:"#FEF9C3", c:"#CA8A04" },
 };
 
+// ── Small inline star input ──────────────────────────────────────────────────
+function StarPicker({ value, onChange }) {
+  const [hover, setHover] = useState(0);
+  return (
+    <div style={{ display: "flex", gap: 4 }}>
+      {[1, 2, 3, 4, 5].map(n => (
+        <button key={n} type="button"
+          onMouseEnter={() => setHover(n)}
+          onMouseLeave={() => setHover(0)}
+          onClick={() => onChange(n)}
+          style={{
+            background: "none", border: "none", cursor: "pointer",
+            fontSize: 30, lineHeight: 1, padding: 0,
+            color: n <= (hover || value) ? "#F59E0B" : "#E5E7EB",
+            transition: "color .15s",
+          }}>★</button>
+      ))}
+    </div>
+  );
+}
+
+// ── Reusable modal shell ─────────────────────────────────────────────────────
+function Modal({ title, children, onClose }) {
+  return (
+    <div
+      onClick={onClose}
+      style={{
+        position: "fixed", inset: 0, background: "rgba(15,23,42,.55)",
+        display: "flex", alignItems: "center", justifyContent: "center",
+        zIndex: 1000, padding: 16,
+      }}>
+      <div
+        onClick={e => e.stopPropagation()}
+        style={{
+          background: "white", borderRadius: 14, width: "100%", maxWidth: 480,
+          boxShadow: "0 20px 60px rgba(0,0,0,.2)", overflow: "hidden",
+        }}>
+        <div style={{
+          display: "flex", justifyContent: "space-between", alignItems: "center",
+          padding: "16px 20px", borderBottom: "1px solid var(--gray-200)",
+        }}>
+          <p style={{ fontSize: 15, fontWeight: 800, color: "var(--gray-800)" }}>{title}</p>
+          <button onClick={onClose} style={{
+            background: "none", border: "none", cursor: "pointer",
+            color: "var(--gray-400)", padding: 4, display: "flex",
+          }}><X size={18} /></button>
+        </div>
+        <div style={{ padding: 20 }}>{children}</div>
+      </div>
+    </div>
+  );
+}
+
 export default function MyAppointments() {
   const [appts,    setAppts]    = useState([]);
   const [loading,  setLoading]  = useState(true);
   const [tab,      setTab]      = useState("all");
-  const [cancelling, setCancelling] = useState(null);
 
-  useEffect(() => {
+  // Modals state
+  const [reviewModal,     setReviewModal]     = useState(null); // appointment or null
+  const [cancelModal,     setCancelModal]     = useState(null);
+  const [rescheduleModal, setRescheduleModal] = useState(null);
+
+  // Form state for the three modals
+  const [rating,        setRating]        = useState(0);
+  const [comment,       setComment]       = useState("");
+  const [cancelReason,  setCancelReason]  = useState("");
+  const [newDate,       setNewDate]       = useState("");
+  const [newTime,       setNewTime]       = useState("");
+
+  const [submitting, setSubmitting] = useState(false);
+
+  const loadAppointments = () => {
+    setLoading(true);
     appointmentAPI.myAppointments()
       .then(r => setAppts(r.data.data.data || []))
       .catch(() => toast.error("Failed to load appointments"))
       .finally(() => setLoading(false));
-  }, []);
+  };
+
+  useEffect(() => { loadAppointments(); }, []);
 
   const filtered = tab === "all" ? appts : appts.filter(a => a.status === tab);
 
-  const cancel = async (id) => {
-    if (!window.confirm("Cancel this appointment?")) return;
-    setCancelling(id);
+  // ── Cancel handler ─────────────────────────────────────────────────────────
+  const submitCancel = async () => {
+    if (!cancelModal) return;
+    setSubmitting(true);
     try {
-      await appointmentAPI.cancel(id, {});
-      setAppts(p => p.map(a => a.id === id ? { ...a, status:"cancelled" } : a));
+      await appointmentAPI.cancel(cancelModal.id, { cancellation_reason: cancelReason });
+      setAppts(p => p.map(a => a.id === cancelModal.id ? { ...a, status: "cancelled" } : a));
       toast.success("Appointment cancelled");
-    } catch {
-      toast.error("Could not cancel appointment");
-    } finally { setCancelling(null); }
+      setCancelModal(null);
+      setCancelReason("");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Could not cancel appointment");
+    } finally { setSubmitting(false); }
   };
+
+  // ── Review handler ─────────────────────────────────────────────────────────
+  const submitReview = async () => {
+    if (!reviewModal) return;
+    if (!rating) { toast.error("Please pick a star rating"); return; }
+    setSubmitting(true);
+    try {
+      const { data } = await reviewAPI.create(reviewModal.id, { rating, comment });
+      // Optimistically attach the review to the appointment so the UI updates immediately.
+      setAppts(p => p.map(a => a.id === reviewModal.id
+        ? { ...a, review: data.data || { rating, comment } }
+        : a));
+      toast.success("Review submitted. Thank you!");
+      setReviewModal(null);
+      setRating(0); setComment("");
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Failed to submit review");
+    } finally { setSubmitting(false); }
+  };
+
+  // ── Reschedule handler ─────────────────────────────────────────────────────
+  const submitReschedule = async () => {
+    if (!rescheduleModal) return;
+    if (!newDate || !newTime) { toast.error("Please pick a new date and time"); return; }
+    setSubmitting(true);
+    try {
+      await appointmentAPI.reschedule(rescheduleModal.id, {
+        appointment_date: newDate,
+        appointment_time: newTime,
+      });
+      toast.success("Appointment rescheduled");
+      setRescheduleModal(null);
+      setNewDate(""); setNewTime("");
+      loadAppointments();
+    } catch (err) {
+      toast.error(err.response?.data?.message || "Could not reschedule");
+    } finally { setSubmitting(false); }
+  };
+
+  const todayISO = new Date().toISOString().split("T")[0];
 
   return (
     <Layout>
@@ -136,17 +248,54 @@ export default function MyAppointments() {
                           Pay Now
                         </Link>
                       )}
-                      {["pending","confirmed"].includes(a.status) && (
+
+                      {/* Reschedule (only when pending/confirmed and not paid yet — safer policy) */}
+                      {["pending","confirmed"].includes(a.status) && !a.is_paid && (
                         <button className="ma-cancel-btn"
-                          onClick={() => cancel(a.id)}
-                          disabled={cancelling === a.id}>
-                          {cancelling === a.id ? "..." : "Cancel"}
+                          style={{ background: "#EFF6FF", color: "#2563EB" }}
+                          onClick={() => {
+                            setRescheduleModal(a);
+                            setNewDate(a.appointment_date || "");
+                            setNewTime(a.appointment_time?.slice(0,5) || "");
+                          }}>
+                          <RefreshCw size={11} style={{ marginRight: 4 }} />
+                          Reschedule
                         </button>
                       )}
-                      {a.status === "completed" && (
-                        <Link to="/patient/prescriptions" className="ma-rx-btn">
+
+                      {["pending","confirmed"].includes(a.status) && (
+                        <button className="ma-cancel-btn"
+                          onClick={() => setCancelModal(a)}>
+                          Cancel
+                        </button>
+                      )}
+
+                      {/* Completed: Rx + Review */}
+                      {a.status === "completed" && a.prescription?.id && (
+                        <Link to={`/prescriptions/${a.prescription.id}`} className="ma-rx-btn">
                           <ChevronRight size={13}/> View Rx
                         </Link>
+                      )}
+                      {a.status === "completed" && !a.prescription?.id && (
+                        <span style={{fontSize:11,color:"var(--gray-400)"}}>No Rx</span>
+                      )}
+
+                      {a.status === "completed" && a.review && (
+                        <span style={{
+                          fontSize:11, fontWeight:700, color:"#F59E0B",
+                          background:"#FEF3C7", padding:"5px 10px", borderRadius:7,
+                          display:"flex", alignItems:"center", gap:3,
+                        }}>
+                          ✓ Reviewed ({a.review.rating}★)
+                        </span>
+                      )}
+                      {a.status === "completed" && !a.review && (
+                        <button className="ma-pay-btn"
+                          style={{ background: "#F59E0B" }}
+                          onClick={() => setReviewModal(a)}>
+                          <Star size={11} style={{ marginRight: 4 }} />
+                          Rate Doctor
+                        </button>
                       )}
                     </div>
                   </div>
@@ -156,7 +305,142 @@ export default function MyAppointments() {
           </div>
         )}
       </div>
+
+      {/* ── Review Modal ──────────────────────────────────────────────────── */}
+      {reviewModal && (
+        <Modal title={`Rate Dr. ${reviewModal.doctor?.user?.name || ""}`}
+          onClose={() => !submitting && setReviewModal(null)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <p style={{ fontSize: 13, color: "var(--gray-600)" }}>
+              How was your consultation? Your feedback helps other patients.
+            </p>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 6, display: "block" }}>
+                Your Rating *
+              </label>
+              <StarPicker value={rating} onChange={setRating} />
+            </div>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 6, display: "block" }}>
+                Your Review (optional)
+              </label>
+              <textarea rows={4}
+                value={comment}
+                onChange={e => setComment(e.target.value)}
+                placeholder="Share your experience..."
+                maxLength={1000}
+                style={{
+                  width: "100%", padding: "10px 12px", fontSize: 13,
+                  border: "1px solid var(--gray-200)", borderRadius: 8,
+                  resize: "vertical", fontFamily: "inherit", outline: "none",
+                }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="ma-cancel-btn"
+                onClick={() => setReviewModal(null)} disabled={submitting}>
+                Cancel
+              </button>
+              <button className="ma-pay-btn"
+                style={{ background: "#F59E0B" }}
+                onClick={submitReview} disabled={submitting}>
+                {submitting ? "Submitting..." : "Submit Review"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Cancel Modal ──────────────────────────────────────────────────── */}
+      {cancelModal && (
+        <Modal title="Cancel Appointment"
+          onClose={() => !submitting && setCancelModal(null)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <p style={{ fontSize: 13, color: "var(--gray-600)" }}>
+              Cancel your appointment with <b>Dr. {cancelModal.doctor?.user?.name}</b> on {cancelModal.appointment_date} at {cancelModal.appointment_time}?
+              {cancelModal.is_paid && (
+                <span style={{ display: "block", marginTop: 8, padding: 10, background: "#FEF9C3", borderRadius: 8, color: "#92400E", fontSize: 12 }}>
+                  ℹ️ You've already paid — a refund will be processed by our team.
+                </span>
+              )}
+            </p>
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 6, display: "block" }}>
+                Reason (optional)
+              </label>
+              <textarea rows={3}
+                value={cancelReason}
+                onChange={e => setCancelReason(e.target.value)}
+                placeholder="Let us know why — helps us improve."
+                maxLength={500}
+                style={{
+                  width: "100%", padding: "10px 12px", fontSize: 13,
+                  border: "1px solid var(--gray-200)", borderRadius: 8,
+                  resize: "vertical", fontFamily: "inherit", outline: "none",
+                }} />
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="ma-cancel-btn"
+                onClick={() => setCancelModal(null)} disabled={submitting}>
+                Keep Appointment
+              </button>
+              <button className="ma-pay-btn"
+                style={{ background: "#DC2626" }}
+                onClick={submitCancel} disabled={submitting}>
+                {submitting ? "Cancelling..." : "Cancel Appointment"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Reschedule Modal ──────────────────────────────────────────────── */}
+      {rescheduleModal && (
+        <Modal title="Reschedule Appointment"
+          onClose={() => !submitting && setRescheduleModal(null)}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+            <p style={{ fontSize: 13, color: "var(--gray-600)" }}>
+              Pick a new date and time. The slot must be within Dr. {rescheduleModal.doctor?.user?.name}'s availability.
+            </p>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 6, display: "block" }}>
+                  New Date
+                </label>
+                <input type="date"
+                  value={newDate} min={todayISO}
+                  onChange={e => setNewDate(e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 12px", fontSize: 13,
+                    border: "1px solid var(--gray-200)", borderRadius: 8, outline: "none",
+                  }} />
+              </div>
+              <div>
+                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 6, display: "block" }}>
+                  New Time
+                </label>
+                <input type="time"
+                  value={newTime} step="1800"
+                  onChange={e => setNewTime(e.target.value)}
+                  style={{
+                    width: "100%", padding: "10px 12px", fontSize: 13,
+                    border: "1px solid var(--gray-200)", borderRadius: 8, outline: "none",
+                  }} />
+              </div>
+            </div>
+            <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+              <button className="ma-cancel-btn"
+                onClick={() => setRescheduleModal(null)} disabled={submitting}>
+                Cancel
+              </button>
+              <button className="ma-pay-btn"
+                style={{ background: "#2563EB" }}
+                onClick={submitReschedule} disabled={submitting}>
+                {submitting ? "Saving..." : "Reschedule"}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
     </Layout>
   );
 }
-

@@ -113,9 +113,14 @@ export default function DoctorDetail() {
     return acc;
   }, {});
 
-  const avgRating = reviews.length
-    ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
-    : null;
+  // F-rating — prefer the server-stored aggregate (covers ALL reviews, not just
+  // the first paginated 10). Fall back to client calc only if missing.
+  const totalReviewCount = doctor.total_reviews ?? reviews.length;
+  const avgRating = doctor.rating
+    ? Number(doctor.rating).toFixed(1)
+    : reviews.length
+      ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1)
+      : null;
 
   return (
     <Layout>
@@ -153,7 +158,7 @@ export default function DoctorDetail() {
                 <div className="dd2-rating-row">
                   <StarRating value={Math.round(avgRating)} readonly />
                   <span className="dd2-rating-val">{avgRating}</span>
-                  <span className="dd2-rating-count">({reviews.length} reviews)</span>
+                  <span className="dd2-rating-count">({totalReviewCount} reviews)</span>
                 </div>
               )}
 
@@ -199,7 +204,7 @@ export default function DoctorDetail() {
               {[
                 { key: 'about',        label: 'About',           icon: <User size={14}/> },
                 { key: 'availability', label: 'Availability',    icon: <Clock size={14}/> },
-                { key: 'reviews',      label: `Reviews (${reviews.length})`, icon: <Star size={14}/> },
+                { key: 'reviews',      label: `Reviews (${totalReviewCount})`, icon: <Star size={14}/> },
               ].map(t => (
                 <button key={t.key}
                   className={`dd2-tab ${tab === t.key ? 'active' : ''}`}
@@ -297,7 +302,7 @@ export default function DoctorDetail() {
                     <div className="dd2-avg-score">
                       <p className="dd2-avg-num">{avgRating}</p>
                       <StarRating value={Math.round(avgRating)} readonly />
-                      <p className="dd2-avg-count">{reviews.length} reviews</p>
+                      <p className="dd2-avg-count">{totalReviewCount} reviews</p>
                     </div>
                     <div className="dd2-rating-bars">
                       {[5,4,3,2,1].map(n => {
@@ -345,7 +350,7 @@ export default function DoctorDetail() {
                         <label className="dd2-label">Your Review</label>
                         <textarea className="dd2-input dd2-textarea" rows={4}
                           value={comment} onChange={e => setComment(e.target.value)}
-                          placeholder="Share your experience with Dr. {doctor.user?.name}..." />
+                          placeholder={`Share your experience with Dr. ${doctor.user?.name || ''}...`} />
                       </div>
                       <button type="submit" className="btn-primary-pd" disabled={submitting}>
                         {submitting ? '...' : <><Star size={14}/> Submit Review</>}
