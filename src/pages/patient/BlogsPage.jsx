@@ -3,6 +3,7 @@ import { Link, useSearchParams } from "react-router-dom";
 import { BookOpen, Eye, Clock } from "lucide-react";
 import Layout from "../../components/layout/Layout";
 import { blogAPI } from "../../api/services";
+import { storageUrl } from "../../utils/helpers";
 import { BlogCardSkeleton } from "../../components/common/Skeleton";
 import "./BlogsPage.css";
 
@@ -74,7 +75,7 @@ export default function BlogsPage() {
                 <Link key={b.id} to={`/blogs/${b.slug}`} className="blog-card">
                   <div className="blog-img">
                     {b.cover_image
-                      ? <img src={`http://localhost:8000/storage/${b.cover_image}`} alt={b.title} />
+                      ? <img src={storageUrl(b.cover_image)} alt={b.title} />
                       : <div className="blog-img-placeholder"><BookOpen size={28} /></div>
                     }
                     <span className="blog-type-badge" style={{ background: ts.bg, color: ts.color }}>

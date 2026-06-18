@@ -52,12 +52,24 @@ export const doctorAPI = {
   getAvailability: (id, date) => getApi().get(`/doctors/${id}/availability`, { params: { date } }),
   getMyProfile:    ()         => doctorApi.get('/doctor/profile'),
   createProfile:   (data)     => doctorApi.post('/doctor/profile', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
-  updateProfile:   (data)     => doctorApi.put('/doctor/profile', data),
+  // Updates also use POST (to /doctor/profile/update) because multipart uploads
+  // on PUT are not reliably parsed by PHP/Laravel. Same method on the controller.
+  updateProfile:   (data)     => doctorApi.post('/doctor/profile/update', data, { headers: { 'Content-Type': 'multipart/form-data' } }),
   addTimeSlot:     (data)     => doctorApi.post('/doctor/time-slots', data),
   deleteTimeSlot:  (id)       => doctorApi.delete(`/doctor/time-slots/${id}`),
+  // H2.#9 — Slot UX helpers
+  copyTimeSlots:   (data)     => doctorApi.post('/doctor/time-slots/copy', data),
+  clearDayTimeSlots: (data)   => doctorApi.post('/doctor/time-slots/clear-day', data),
+  // H2.#10 — Leave management
+  listUnavailableDates: ()    => doctorApi.get('/doctor/unavailable-dates'),
+  addUnavailableDate: (data)  => doctorApi.post('/doctor/unavailable-dates', data),
+  deleteUnavailableDate: (id) => doctorApi.delete(`/doctor/unavailable-dates/${id}`),
+  // H2.#13 — Resubmit verification
+  resubmitVerification: ()    => doctorApi.post('/doctor/resubmit-verification'),
   getAppointments: ()         => doctorApi.get('/doctor/appointments'),
   confirmAppt:     (id)       => doctorApi.post(`/doctor/appointments/${id}/confirm`),
   completeAppt:    (id)       => doctorApi.post(`/doctor/appointments/${id}/complete`),
+  patientHistory:  (patientId) => doctorApi.get(`/doctor/patients/${patientId}/history`),
 };
 
 export const patientAPI = {
@@ -104,6 +116,7 @@ export const prescriptionAPI = {
   getById:     (id)              => getApi().get(`/prescriptions/${id}`),
   downloadPdf: (id)              => getApi().get(`/prescriptions/${id}/download`, { responseType: 'blob' }),
   create:      (appointmentId, data) => doctorApi.post(`/appointments/${appointmentId}/prescriptions`, data),
+  update:      (id, data)        => doctorApi.put(`/prescriptions/${id}`, data),
 };
 
 export const medicalRecordAPI = {
@@ -131,6 +144,21 @@ export const blogAPI = {
 export const reviewAPI = {
   getDoctorReviews: (doctorId)            => getApi().get(`/doctors/${doctorId}/reviews`),
   create:           (appointmentId, data) => patientApi.post(`/appointments/${appointmentId}/review`, data),
+};
+
+// ────────────────────────────────────────────────────────────────────────
+//  NOTIFICATIONS — H4
+//
+//  Same set of endpoints for every role; getApi() picks the right axios
+//  instance (and therefore the right token) based on the current URL. The
+//  unreadCount call is the hot one — hit every 30 seconds while the tab is
+//  visible — so it's kept payload-tiny on the backend.
+// ────────────────────────────────────────────────────────────────────────
+export const notificationAPI = {
+  list:        ()    => getApi().get('/notifications'),
+  unreadCount: ()    => getApi().get('/notifications/unread-count'),
+  markRead:    (id)  => getApi().post(`/notifications/${id}/read`),
+  markAllRead: ()    => getApi().post('/notifications/read-all'),
 };
 
 export const adminAPI = {

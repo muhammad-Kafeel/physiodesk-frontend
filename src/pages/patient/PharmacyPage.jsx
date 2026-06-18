@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { pharmacyAPI, paymentAPI, guestAPI } from '../../api/services';
+import { storageUrl } from '../../utils/helpers';
 import { usePatientAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import './PharmacyPage.css';
@@ -300,7 +301,7 @@ export default function PharmacyPage() {
               return (
                 <div key={med.id} className="ph-med-card">
                   <div className="ph-med-img">
-                    {med.image ? <img src={`http://localhost:8000/storage/${med.image}`} alt={med.name}/> : <Pill size={36} color="var(--primary)"/>}
+                    {med.image ? <img src={storageUrl(med.image)} alt={med.name}/> : <Pill size={36} color="var(--primary)"/>}
                     {med.requires_prescription && (
                       <span className="ph-rx-badge">{isGuest ? <><Lock size={9}/> Rx — Login</> : 'Rx Required'}</span>
                     )}

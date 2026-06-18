@@ -117,3 +117,190 @@
   .dp-tabs::-webkit-scrollbar { display: none; }
   .dp-form-card { padding: 18px; }
 }
+
+
+/* ═══════════════════════════════════════════════════════
+   H2 — Additions for verification card, slot UX,
+   leave management. None of these override existing dp-*
+   rules — they only add to them.
+═══════════════════════════════════════════════════════ */
+
+/* ── Verification status card (H2.#13) ───────────────── */
+.dp-verify-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  border-radius: 12px;
+  border: 1.5px solid;
+  margin-bottom: 18px;
+  flex-wrap: wrap;
+}
+.dp-verify-card .dp-verify-icon {
+  width: 44px; height: 44px;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.dp-verify-body { flex: 1; min-width: 220px; }
+.dp-verify-title { font-size: 14.5px; font-weight: 700; margin-bottom: 3px; }
+.dp-verify-msg   { font-size: 13px; line-height: 1.45; }
+
+.dp-verify-ok       { background: #ECFDF5; border-color: #A7F3D0; color: #065F46; }
+.dp-verify-ok .dp-verify-icon { background: #D1FAE5; color: #047857; }
+
+.dp-verify-pending  { background: #FFFBEB; border-color: #FDE68A; color: #92400E; }
+.dp-verify-pending .dp-verify-icon { background: #FEF3C7; color: #B45309; }
+
+.dp-verify-rejected { background: #FEF2F2; border-color: #FECACA; color: #991B1B; }
+.dp-verify-rejected .dp-verify-icon { background: #FEE2E2; color: #B91C1C; }
+
+/* ── Copy-day block (H2.#9) ──────────────────────────── */
+.dp-copy-block {
+  background: var(--gray-50, #f8fafc);
+  border: 1px dashed var(--gray-200, #e2e8f0);
+  border-radius: 10px;
+  padding: 14px 16px;
+  margin-top: 16px;
+}
+.dp-copy-title {
+  font-size: 13.5px;
+  font-weight: 700;
+  color: var(--gray-700, #334155);
+  display: flex; align-items: center; gap: 6px;
+  margin-bottom: 10px;
+}
+.dp-copy-grid {
+  display: grid;
+  grid-template-columns: 160px 1fr auto;
+  gap: 12px;
+  align-items: end;
+}
+@media (max-width: 700px) {
+  .dp-copy-grid { grid-template-columns: 1fr; }
+}
+.dp-target-chips {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding-top: 4px;
+}
+.dp-target-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600;
+  padding: 5px 10px;
+  border-radius: 99px;
+  border: 1.5px solid var(--gray-200, #e2e8f0);
+  background: #fff;
+  cursor: pointer;
+  user-select: none;
+  color: var(--gray-600, #475569);
+}
+.dp-target-chip input { display: none; }
+.dp-target-chip.on {
+  background: var(--teal-light, #CCFBF1);
+  border-color: var(--teal, #0D9488);
+  color: var(--teal, #0D9488);
+}
+
+/* ── Day group header + clear-day button (H2.#9) ─────── */
+.dp-day-group-head {
+  display: flex; align-items: center; justify-content: space-between;
+  margin-bottom: 6px;
+}
+.dp-day-clear {
+  display: inline-flex; align-items: center; gap: 4px;
+  font-size: 11px; font-weight: 600;
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--gray-500, #64748b);
+  padding: 3px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+.dp-day-clear:hover {
+  background: #FEF2F2;
+  color: #DC2626;
+  border-color: #FECACA;
+}
+
+/* ── Leave / unavailable dates (H2.#10) ──────────────── */
+.dp-leave-grid {
+  display: grid;
+  grid-template-columns: 200px 1fr 220px auto;
+  gap: 12px;
+  align-items: start;
+}
+@media (max-width: 800px) {
+  .dp-leave-grid { grid-template-columns: 1fr; }
+}
+.dp-leave-share { align-self: flex-start; }
+.dp-checkbox-row {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600;
+  color: var(--gray-700, #334155);
+  cursor: pointer;
+}
+.dp-checkbox-row input { width: 14px; height: 14px; }
+
+.dp-leave-list {
+  margin-top: 18px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.dp-leave-row {
+  display: grid;
+  grid-template-columns: 220px 1fr 28px;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  border: 1px solid var(--gray-200, #e2e8f0);
+  border-radius: 9px;
+  background: #fff;
+}
+.dp-leave-date {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 13px; font-weight: 700;
+  color: var(--gray-800, #1e293b);
+}
+.dp-leave-meta {
+  font-size: 12.5px;
+  color: var(--gray-600, #475569);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 8px;
+}
+.dp-leave-visibility {
+  display: inline-flex; align-items: center; gap: 3px;
+  font-size: 10.5px; font-weight: 700;
+  padding: 2px 7px; border-radius: 99px;
+  margin-left: 6px;
+}
+.dp-leave-visibility.pub  { background: #DCFCE7; color: #166534; }
+.dp-leave-visibility.priv { background: var(--gray-100, #f1f5f9); color: var(--gray-600, #475569); }
+.dp-leave-del {
+  width: 26px; height: 26px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 7px;
+  color: var(--gray-500, #64748b);
+  cursor: pointer;
+}
+.dp-leave-del:hover { background: #FEF2F2; color: #DC2626; }
+
+@media (max-width: 600px) {
+  .dp-leave-row { grid-template-columns: 1fr; }
+}
+
+
+/* ── Inline field errors (H2) ────────────────────────── */
+/* The whole control turns red when its corresponding API error is present.
+   The message below uses the same red so the eye gets pulled straight to it. */
+.dp-input-error,
+.dp-input-error:focus {
+  border-color: #DC2626 !important;
+  box-shadow: 0 0 0 3px rgba(220, 38, 38, .12) !important;
+}
+.dp-error {
+  margin-top: 6px;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: #DC2626;
+  line-height: 1.35;
+}

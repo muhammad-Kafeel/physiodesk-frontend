@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Plus, Edit2, Trash2, Eye, BookOpen, Save, X, Upload } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
+import ConfirmDialog from '../../components/common/ConfirmDialog';
 import { blogAPI } from '../../api/services';
+import { storageUrl } from '../../utils/helpers';
 import { toast } from 'react-toastify';
 import './DoctorBlogs.css';
 
@@ -22,6 +24,10 @@ export default function DoctorBlogs() {
   const [deleting,setDeleting]= useState(null);
   const [form,    setForm]    = useState(EMPTY_FORM);
   const [coverFile,setCoverFile]=useState(null);
+
+  // H4 — Holds the id of the blog the doctor is about to delete; null when
+  // the confirm dialog is closed.
+  const [deleteTarget, setDeleteTarget] = useState(null);
 
   const load = () => {
     setLoading(true);
@@ -95,8 +101,14 @@ export default function DoctorBlogs() {
     }
   };
 
-  const deleteBlog = async (id) => {
-    if (!window.confirm('Delete this blog?')) return;
+  const deleteBlog = (id) => {
+    // H4 — Open the confirm dialog; the actual delete runs on confirm.
+    setDeleteTarget(id);
+  };
+
+  const handleDeleteConfirmed = async () => {
+    const id = deleteTarget;
+    if (!id) return;
     setDeleting(id);
     try {
       await blogAPI.delete(id);
@@ -106,6 +118,7 @@ export default function DoctorBlogs() {
       toast.error('Failed to delete');
     } finally {
       setDeleting(null);
+      setDeleteTarget(null);
     }
   };
 
@@ -219,7 +232,7 @@ export default function DoctorBlogs() {
                   <div key={b.id} className="db-blog-card">
                     {b.cover_image && (
                       <div className="db-cover">
-                        <img src={`http://localhost:8000/storage/${b.cover_image}`} alt={b.title}/>
+                        <img src={storageUrl(b.cover_image)} alt={b.title}/>
                       </div>
                     )}
                     <div className="db-blog-body">
@@ -255,6 +268,19 @@ export default function DoctorBlogs() {
           )
         }
       </div>
+
+      {/* H4 — Delete confirmation. Destructive action → danger variant. */}
+      <ConfirmDialog
+        open={deleteTarget !== null}
+        title="Delete this blog?"
+        message="This permanently removes the blog post. Patients who bookmarked it will get a not-found page. This can't be undone."
+        confirmLabel="Delete"
+        cancelLabel="Keep"
+        variant="danger"
+        busy={deleting === deleteTarget}
+        onConfirm={handleDeleteConfirmed}
+        onCancel={() => setDeleteTarget(null)}
+      />
     </DashboardLayout>
   );
 }

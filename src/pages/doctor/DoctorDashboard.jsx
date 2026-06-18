@@ -47,6 +47,15 @@ export default function DoctorDashboard() {
     .filter(a => a.status === 'completed' && a.is_paid)
     .reduce((sum, a) => sum + Number(a.fee || 0), 0);
 
+  // H2 — Distinguish the three verification states on the dashboard. Until
+  // now we collapsed "rejected" into "pending", which meant a doctor with a
+  // rejection sitting on their profile saw a neutral "under review" banner
+  // here and had to navigate to /doctor/profile to discover anything was
+  // wrong. That's bad UX; the dashboard is the FIRST page they see.
+  const isVerified = !!profile?.is_verified;
+  const isRejected = !!profile && !isVerified && !!profile.rejected_reason;
+  const isPending  = !!profile && !isVerified && !isRejected;
+
   return (
     <DashboardLayout>
       <div className="dd-wrap">
@@ -58,9 +67,11 @@ export default function DoctorDashboard() {
               {greeting}, Dr. {user?.name?.split(' ')[0]}
             </h1>
             <p className="dd-sub">
-              {profile?.is_verified
+              {isVerified
                 ? `You have ${upcoming.length} upcoming appointment${upcoming.length !== 1 ? 's' : ''}.`
-                : 'Your profile is pending admin verification.'}
+                : isRejected
+                  ? 'Your verification was rejected. Please review and resubmit.'
+                  : 'Your profile is pending admin verification.'}
             </p>
           </div>
           {!profile && (
@@ -77,8 +88,21 @@ export default function DoctorDashboard() {
           </div>
         )}
 
-        {/* Verification pending warning */}
-        {profile && !profile.is_verified && (
+        {/* H2 — Rejected: red, urgent, with the rejection reason inline so the
+            doctor sees what to fix without having to navigate first. The link
+            takes them to the profile page where the Resubmit button lives. */}
+        {isRejected && (
+          <div className="dd-alert dd-alert-danger">
+            <AlertTriangle size={16} />
+            <span>
+              <strong>Your verification was rejected.</strong> Reason: {profile.rejected_reason}
+            </span>
+            <Link to="/doctor/profile" className="dd-alert-link">Fix &amp; resubmit</Link>
+          </div>
+        )}
+
+        {/* Pending: neutral / informational. Shown only when there's no rejection. */}
+        {isPending && (
           <div className="dd-alert dd-alert-info">
             <Info size={16} />
             <span>Your profile is under review. Admin will verify it shortly.</span>
@@ -86,20 +110,25 @@ export default function DoctorDashboard() {
         )}
 
         {/* Stats */}
+        {/* H4.1 — Each stat card is now a clickable Link that deep-links to the
+            appointments page with the appropriate tab pre-selected, so a doctor
+            can jump from a number straight into the matching list. The
+            "Total Earnings" card links to all appointments for now — a dedicated
+            earnings page is coming in batch H3. */}
         <div className="dd-stats">
           {[
-            { label: 'Total Appointments', value: appts.length,    icon: <Calendar size={20}/>,    bg: 'var(--primary-light)', color: 'var(--primary)' },
-            { label: 'Completed',          value: completed,        icon: <CheckCircle size={20}/>, bg: 'var(--success-light)', color: 'var(--success)' },
-            { label: 'Pending Confirm',    value: pending,          icon: <Clock size={20}/>,       bg: 'var(--warning-light)', color: 'var(--warning)' },
-            { label: 'Total Earnings',     value: `Rs. ${totalEarnings.toLocaleString()}`, icon: <Activity size={20}/>, bg: 'var(--teal-light)', color: 'var(--teal)' },
+            { label: 'Total Appointments', value: appts.length,    icon: <Calendar size={20}/>,    bg: 'var(--primary-light)', color: 'var(--primary)', to: '/doctor/appointments' },
+            { label: 'Completed',          value: completed,        icon: <CheckCircle size={20}/>, bg: 'var(--success-light)', color: 'var(--success)', to: '/doctor/appointments?tab=completed' },
+            { label: 'Pending Confirm',    value: pending,          icon: <Clock size={20}/>,       bg: 'var(--warning-light)', color: 'var(--warning)', to: '/doctor/appointments?tab=pending' },
+            { label: 'Total Earnings',     value: `Rs. ${totalEarnings.toLocaleString()}`, icon: <Activity size={20}/>, bg: 'var(--teal-light)', color: 'var(--teal)', to: '/doctor/appointments?tab=completed' },
           ].map((s, i) => (
-            <div key={i} className="dd-stat-card">
+            <Link key={i} to={s.to} className="dd-stat-card dd-stat-card-link" aria-label={`View ${s.label}`}>
               <div className="dd-stat-icon" style={{ background: s.bg, color: s.color }}>{s.icon}</div>
               <div>
                 <p className="dd-stat-val">{s.value}</p>
                 <p className="dd-stat-label">{s.label}</p>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
 

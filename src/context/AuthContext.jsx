@@ -224,9 +224,17 @@ export const usePortalAuth = () => {
   const doctor   = useDoctorAuth();
   const admin    = useAdminAuth();
 
+  // Match the portal prefix INCLUDING the path separator (or end of string),
+  // so paths like `/doctors` and `/doctors/123` do NOT accidentally match the
+  // `/doctor` portal. Without this, a logged-in patient browsing the public
+  // doctor listing would get the doctor session back, which is empty, and the
+  // header would render "Sign In" instead of their account dropdown.
+  const isAdminPath  = location.pathname === '/admin'  || location.pathname.startsWith('/admin/');
+  const isDoctorPath = location.pathname === '/doctor' || location.pathname.startsWith('/doctor/');
+
   const portal =
-    location.pathname.startsWith('/admin')  ? 'admin'  :
-    location.pathname.startsWith('/doctor') ? 'doctor' :
+    isAdminPath  ? 'admin'  :
+    isDoctorPath ? 'doctor' :
     'patient';
 
   const session =

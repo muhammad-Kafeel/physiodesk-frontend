@@ -3,6 +3,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { ArrowLeft, Eye, Calendar, User, Tag, BookOpen, Clock } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { blogAPI } from '../../api/services';
+import { storageUrl } from '../../utils/helpers';
 import './BlogDetail.css';
 
 export default function BlogDetail() {
@@ -77,7 +78,7 @@ export default function BlogDetail() {
         {blog.cover_image && (
           <div className="bd-cover-wrap">
             <img
-              src={`http://localhost:8000/storage/${blog.cover_image}`}
+              src={storageUrl(blog.cover_image)}
               alt={blog.title}
               className="bd-cover-img"
             />

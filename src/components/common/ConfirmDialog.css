@@ -1,0 +1,169 @@
+/* ───────────────────────────────────────────────────────
+   ConfirmDialog — modal styles
+   Variables (var(--primary), var(--gray-*) etc.) come from
+   the global theme in src/index.css.
+─────────────────────────────────────────────────────── */
+
+.cd-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.55);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 1000;
+  animation: cd-fade .15s ease;
+}
+
+@keyframes cd-fade {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes cd-pop {
+  from { opacity: 0; transform: translateY(8px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0)    scale(1); }
+}
+
+.cd-panel {
+  background: #fff;
+  border-radius: 14px;
+  width: 100%;
+  max-width: 440px;
+  padding: 22px 22px 18px;
+  box-shadow: 0 20px 50px rgba(15,23,42,.18);
+  position: relative;
+  animation: cd-pop .16s ease;
+}
+
+.cd-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 30px; height: 30px;
+  display: flex; align-items: center; justify-content: center;
+  border: none;
+  background: transparent;
+  color: var(--gray-500, #64748b);
+  border-radius: 8px;
+  cursor: pointer;
+}
+.cd-close:hover { background: var(--gray-100, #f1f5f9); }
+
+.cd-head {
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  padding-right: 26px;
+}
+
+.cd-icon {
+  width: 40px; height: 40px;
+  border-radius: 10px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.cd-icon-primary { background: #EFF6FF; color: #2563EB; }
+.cd-icon-danger  { background: #FEF2F2; color: #DC2626; }
+
+.cd-title {
+  margin: 0 0 4px;
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--gray-900, #0f172a);
+  line-height: 1.35;
+}
+.cd-message {
+  margin: 0;
+  font-size: 13.5px;
+  color: var(--gray-600, #475569);
+  line-height: 1.5;
+}
+
+/* ── Reason textarea ─────────────────────────────────── */
+.cd-reason {
+  margin-top: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.cd-reason-label {
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--gray-700, #334155);
+}
+.cd-reason-required { color: #DC2626; }
+.cd-reason-input {
+  width: 100%;
+  padding: 9px 11px;
+  border: 1.5px solid var(--gray-200, #e2e8f0);
+  border-radius: 9px;
+  font: inherit;
+  font-size: 13.5px;
+  resize: vertical;
+  min-height: 70px;
+  color: var(--gray-800, #1e293b);
+  transition: border-color .12s, box-shadow .12s;
+}
+.cd-reason-input:focus {
+  outline: none;
+  border-color: var(--primary, #2563eb);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+.cd-reason-count {
+  font-size: 11px;
+  color: var(--gray-500, #64748b);
+  text-align: right;
+}
+
+/* ── Action buttons ──────────────────────────────────── */
+.cd-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  margin-top: 18px;
+}
+.cd-btn {
+  font: inherit;
+  font-size: 13.5px;
+  font-weight: 600;
+  padding: 9px 16px;
+  border-radius: 9px;
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  transition: background .12s, border-color .12s, opacity .12s;
+}
+.cd-btn:disabled { opacity: .55; cursor: not-allowed; }
+
+.cd-btn-secondary {
+  background: #fff;
+  border-color: var(--gray-200, #e2e8f0);
+  color: var(--gray-700, #334155);
+}
+.cd-btn-secondary:hover:not(:disabled) { background: var(--gray-50, #f8fafc); }
+
+/* Primary (neutral) confirm */
+.cd-btn-primary.cd-btn-primary {
+  background: var(--primary, #2563eb);
+  color: #fff;
+  border-color: var(--primary, #2563eb);
+}
+.cd-btn-primary.cd-btn-primary:hover:not(:disabled) { background: #1d4ed8; border-color: #1d4ed8; }
+
+/* Danger confirm — overrides the primary colour for destructive intent */
+.cd-btn-danger {
+  background: #DC2626 !important;
+  border-color: #DC2626 !important;
+}
+.cd-btn-danger:hover:not(:disabled) {
+  background: #B91C1C !important;
+  border-color: #B91C1C !important;
+}
+
+@media (max-width: 480px) {
+  .cd-panel { padding: 18px 16px 14px; }
+  .cd-actions { flex-direction: column-reverse; }
+  .cd-actions .cd-btn { width: 100%; }
+}

@@ -1,6 +1,7 @@
 import { Link } from 'react-router-dom';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import NotificationBell from '../common/NotificationBell';
 import './Navbar.css';
 
 /**
@@ -42,6 +43,10 @@ const Navbar = () => {
       </Link>
 
       <div className="nb-right">
+        {/* H4 — In-app notifications. Mounted only when a user is logged in;
+            unauthenticated visitors don't have a session to poll. */}
+        <NotificationBell enabled={!!user} />
+
         <span className="nb-greeting">
           {user?.name?.split(' ')[0]}
         </span>

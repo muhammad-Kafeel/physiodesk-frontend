@@ -1,6 +1,6 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { Calendar, Clock, Video, ChevronRight, AlertCircle, MapPin, CreditCard } from 'lucide-react';
+import { Calendar, Clock, Video, ChevronRight, AlertCircle, MapPin, CreditCard, CalendarOff } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
 import { doctorAPI, appointmentAPI } from '../../api/services';
 import { storageUrl } from '../../utils/helpers'; // F20
@@ -8,24 +8,9 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import './BookAppointment.css';
 
-// F09 — Generate 30-min intervals between a start and end time string "HH:MM"
-function generateSlots(startStr, endStr) {
-  const [sh, sm] = startStr.split(':').map(Number);
-  const [eh, em] = endStr.split(':').map(Number);
-  const slots = [];
-  let cur = sh * 60 + sm;
-  const end = eh * 60 + em;
-  while (cur + 30 <= end) {
-    const h = String(Math.floor(cur / 60)).padStart(2, '0');
-    const m = String(cur % 60).padStart(2, '0');
-    slots.push(`${h}:${m}`);
-    cur += 30;
-  }
-  return slots;
-}
-
-// Maps JS getDay() (0=Sun) to our day_of_week strings
-const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
+// (DAY_NAMES kept for potential future client-side computations; unused right
+// now since the server is the authority on the slot grid.)
+const DAY_NAMES = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday']; // eslint-disable-line no-unused-vars
 
 export default function BookAppointment() {
   const { id }                    = useParams();
@@ -38,6 +23,9 @@ export default function BookAppointment() {
   const [symptoms, setSymptoms]   = useState('');
   const [notes,    setNotes]      = useState('');
   const [takenTimes, setTakenTimes] = useState([]);
+  // H2 — Server now drives the full slot grid (it knows the doctor's
+  // slot_duration and any leave dates), so we keep its response in state.
+  const [serverAvail, setServerAvail] = useState({ all: [], available: [], unavailable: false, reason: null });
   const { user }                  = useAuth();
   const navigate                  = useNavigate();
 
@@ -52,44 +40,45 @@ export default function BookAppointment() {
       .finally(() => setLoading(false));
   }, [id, navigate]);
 
-  // F09 — Derive the doctor's full slot list for the chosen weekday (before removing
-  // already-booked times), so we can tell "doesn't work this day" apart from "all booked".
-  const daySlots = useMemo(() => {
-    // The API serialises the relation as snake_case `time_slots`; the camelCase
-    // fallback keeps this working if a future endpoint returns it differently.
-    const slots = doctor?.time_slots || doctor?.timeSlots || [];
-    if (!date || !slots.length) return [];
-    const dayName = DAY_NAMES[new Date(date + 'T00:00:00').getDay()];
-    const dayRows = slots.filter(
-      s => s.day_of_week === dayName && s.is_available
-    );
-    const allTimes = [];
-    dayRows.forEach(s => {
-      generateSlots(s.start_time.slice(0, 5), s.end_time.slice(0, 5))
-        .forEach(t => allTimes.push(t));
-    });
-    return [...new Set(allTimes)].sort();
-  }, [date, doctor]);
-
-  // Bookable times = the day's slots minus the ones already taken.
-  const availableSlots = useMemo(
-    () => daySlots.filter(t => !takenTimes.includes(t)),
-    [daySlots, takenTimes]
-  );
+  // H2 — The server is now the authority on what slots exist for a given
+  // date (it applies slot_duration and excludes leave dates). We use its
+  // response directly; daySlots is left for backward-compat callers.
+  const daySlots = serverAvail.all || [];
+  const availableSlots = serverAvail.available || [];
 
   // Clear selected time when date changes and slots differ
   useEffect(() => {
     if (time && !availableSlots.includes(time)) setTime('');
   }, [availableSlots]);
 
-  // Pull already-booked times for the chosen date so taken slots aren't offered.
-  // Falls back silently to the client-computed slots if the request fails.
+  // Pull the authoritative availability for the chosen date. The server
+  // applies slot_duration, removes already-taken times, and short-circuits
+  // with `unavailable: true` if the date is a doctor leave.
   useEffect(() => {
-    if (!date || !doctor) { setTakenTimes([]); return; }
+    if (!date || !doctor) {
+      setTakenTimes([]);
+      setServerAvail({ all: [], available: [], unavailable: false, reason: null });
+      return;
+    }
     let cancelled = false;
     doctorAPI.getAvailability(doctor.id, date)
-      .then(r => { if (!cancelled) setTakenTimes(r.data?.data?.taken || []); })
-      .catch(() => { if (!cancelled) setTakenTimes([]); });
+      .then(r => {
+        if (cancelled) return;
+        const d = r.data?.data || {};
+        setTakenTimes(d.taken || []);
+        setServerAvail({
+          all:         d.all || [],
+          available:   d.available || [],
+          unavailable: !!d.unavailable,
+          reason:      d.reason || null,
+        });
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setTakenTimes([]);
+          setServerAvail({ all: [], available: [], unavailable: false, reason: null });
+        }
+      });
     return () => { cancelled = true; };
   }, [date, doctor]);
 
@@ -169,11 +158,20 @@ export default function BookAppointment() {
                   />
                 </div>
 
-                {/* F09 — Dynamic time slots from doctor's schedule */}
+                {/* H2 — The slot grid is now driven by serverAvail. Two new
+                    states are surfaced: 'unavailable' (doctor on leave) and the
+                    empty-grid "doesn't work this day". */}
                 <div className="ba-field">
                   <label className="ba-label"><Clock size={14} /> Select Time</label>
                   {!date ? (
                     <p style={{ fontSize: 13, color: 'var(--gray-400)' }}>Please select a date first.</p>
+                  ) : serverAvail.unavailable ? (
+                    <div className="ba-notice" style={{ marginTop: 0 }}>
+                      <CalendarOff size={15} />
+                      <p>
+                        Dr. {u.name} is unavailable on this date{serverAvail.reason ? ` (${serverAvail.reason})` : ''}. Please pick another day.
+                      </p>
+                    </div>
                   ) : daySlots.length === 0 ? (
                     <div className="ba-notice" style={{ marginTop: 0 }}>
                       <AlertCircle size={15} />

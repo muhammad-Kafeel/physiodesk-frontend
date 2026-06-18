@@ -156,3 +156,125 @@
   font-size: 13px; font-weight: 700; transition: var(--transition);
 }
 .da-btn-video:hover { background: #15803D; color: white; }
+
+/* ── Patient History Button ── */
+.da-btn-history {
+  display: flex; align-items: center; gap: 6px;
+  background: white; color: var(--gray-700);
+  border: 1.5px solid var(--gray-200); cursor: pointer;
+  padding: 8px 16px; border-radius: var(--radius-sm);
+  font-size: 13px; font-weight: 700; transition: var(--transition);
+}
+.da-btn-history:hover { border-color: var(--teal); color: var(--teal); background: var(--teal-light, #F0FDFA); }
+
+/* ── Patient History Modal ── */
+.da-hist-overlay {
+  position: fixed; inset: 0; background: rgba(15, 23, 42, .55);
+  display: flex; align-items: flex-start; justify-content: center;
+  z-index: 1000; padding: 5vh 16px; overflow-y: auto;
+  backdrop-filter: blur(2px);
+}
+.da-hist-modal {
+  background: white; width: 100%; max-width: 720px;
+  border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,.25);
+  display: flex; flex-direction: column; max-height: 90vh; overflow: hidden;
+  animation: daHistIn .18s ease-out;
+}
+@keyframes daHistIn {
+  from { opacity: 0; transform: translateY(-12px) scale(.98); }
+  to   { opacity: 1; transform: translateY(0)     scale(1); }
+}
+.da-hist-head {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 18px 22px; border-bottom: 1px solid var(--gray-200);
+  flex-shrink: 0;
+}
+.da-hist-title {
+  display: flex; align-items: center; gap: 8px;
+  font-size: 16px; font-weight: 800; color: var(--gray-800); margin: 0;
+}
+.da-hist-sub { font-size: 13px; color: var(--gray-500); margin-top: 2px; }
+.da-hist-close {
+  background: var(--gray-100); border: none; cursor: pointer;
+  width: 32px; height: 32px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  color: var(--gray-600); transition: var(--transition);
+}
+.da-hist-close:hover { background: var(--gray-200); color: var(--gray-800); }
+
+.da-hist-body {
+  padding: 20px 22px; overflow-y: auto; flex: 1;
+}
+.da-hist-error {
+  display: flex; align-items: center; gap: 10px;
+  background: #FEE2E2; color: #B91C1C;
+  padding: 14px 16px; border-radius: 10px;
+  font-size: 13px; font-weight: 600;
+}
+
+.da-hist-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px;
+  margin-bottom: 18px;
+}
+.da-hist-stat {
+  background: var(--gray-50); border-radius: 10px;
+  padding: 12px; text-align: center;
+}
+.da-hist-stat-val { font-size: 20px; font-weight: 800; color: var(--gray-800); margin: 0; }
+.da-hist-stat-lbl { font-size: 11px; color: var(--gray-500); margin-top: 2px; font-weight: 600; }
+
+.da-hist-meta {
+  background: #FFFBEB; border: 1px solid #FCD34D33;
+  border-radius: 10px; padding: 12px 14px; margin-bottom: 18px;
+  display: flex; flex-direction: column; gap: 6px;
+}
+.da-hist-meta-row {
+  display: flex; justify-content: space-between;
+  font-size: 12.5px;
+}
+.da-hist-meta-row span:first-child { color: var(--gray-500); font-weight: 600; }
+.da-hist-meta-row span:last-child  { color: var(--gray-800); font-weight: 600; }
+
+.da-hist-section-title {
+  font-size: 13px; font-weight: 800; color: var(--gray-700);
+  text-transform: uppercase; letter-spacing: .5px;
+  margin-bottom: 10px;
+}
+
+.da-hist-list { display: flex; flex-direction: column; gap: 10px; }
+.da-hist-item {
+  background: white; border: 1px solid var(--gray-200);
+  border-radius: 10px; padding: 14px;
+}
+.da-hist-item-head {
+  display: flex; justify-content: space-between; align-items: center;
+  margin-bottom: 10px; flex-wrap: wrap; gap: 6px;
+}
+.da-hist-item-date {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 13px; color: var(--gray-700);
+}
+
+.da-hist-block {
+  background: var(--gray-50); border-radius: 8px;
+  padding: 10px 12px; margin-top: 8px;
+}
+.da-hist-block-rx { background: #ECFDF5; }
+.da-hist-block-label {
+  display: flex; align-items: center; gap: 4px;
+  font-size: 10.5px; font-weight: 800; color: var(--gray-500);
+  text-transform: uppercase; letter-spacing: .5px; margin-bottom: 4px;
+}
+.da-hist-block-text { font-size: 13px; color: var(--gray-800); line-height: 1.5; margin: 0; }
+
+.da-hist-meds {
+  margin: 6px 0 0; padding-left: 18px;
+  font-size: 12.5px; color: var(--gray-700);
+}
+.da-hist-meds li { margin-bottom: 2px; }
+.da-hist-notes { font-size: 12px; color: var(--gray-500); margin-top: 8px; }
+
+@media (max-width: 600px) {
+  .da-hist-stats { grid-template-columns: repeat(2, 1fr); }
+  .da-hist-modal { max-height: 95vh; }
+}
