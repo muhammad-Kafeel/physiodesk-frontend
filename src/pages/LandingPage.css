@@ -369,6 +369,35 @@
   font-size: 12px; color: var(--success); font-weight: 600;
   padding-top: 12px; border-top: 1px solid var(--gray-100);
 }
+.pd-scroll-row {
+  display: flex;
+  gap: 16px;
+  overflow: hidden;
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+/* Inner moving track */
+.lp-review-track {
+  display: flex;
+  gap: 16px;
+  animation: scrollReviews 35s linear infinite;
+  width: max-content;
+}
+
+/* Pause on hover */
+.lp-review-track:hover {
+  animation-play-state: paused;
+}
+
+@keyframes scrollReviews {
+  0% {
+    transform: translateX(0);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
 
 /* ════════════════════════════════════════════════════════════
    8. DOCTOR CTA BANNER
@@ -449,7 +478,21 @@
   .lp-search-input { height: 46px; }
   .lp-spec-grid  { grid-template-columns: repeat(2, 1fr); }
   .lp-quick-grid { grid-template-columns: repeat(3, 1fr); }
-  .lp-stats-inner { flex-direction: column; align-items: flex-start; }
+  /* .lp-stats-inner { flex-direction: column; align-items: flex-start; } */
+  .lp-stats-inner {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    align-items: stretch;
+  }
+
+  .lp-stat-item {
+    width: 100%;
+  }
+
+  .lp-stat-divider {
+    display: none;
+  }
   .lp-stat-divider { display: none; }
 }
 

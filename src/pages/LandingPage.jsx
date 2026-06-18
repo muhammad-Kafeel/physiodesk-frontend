@@ -318,26 +318,30 @@ export default function LandingPage() {
             </div>
           </div>
           <div className="pd-scroll-row">
-            {REVIEWS.map((r, i) => (
-              <div key={i} className="lp-review-card">
-                <div className="lp-review-header">
-                  <div className="lp-review-avatar">
-                    {r.name.split(' ').map(n => n[0]).join('')}
-                  </div>
-                  <div>
-                    <p className="lp-review-name">{r.name}</p>
-                    <p className="lp-review-city">{r.city}</p>
-                  </div>
-                  <StarRow count={r.stars}/>
-                </div>
-                <p className="lp-review-text">{r.text}</p>
-                <div className="lp-review-footer">
-                  <CheckCircle size={14} color="#059669"/>
-                  <span>Verified Patient</span>
-                </div>
-              </div>
-            ))}
+  <div className="lp-review-track">
+    {[...REVIEWS, ...REVIEWS].map((r, i) => (
+      <div key={i} className="lp-review-card">
+        <div className="lp-review-header">
+          <div className="lp-review-avatar">
+            {r.name.split(' ').map(n => n[0]).join('')}
           </div>
+          <div>
+            <p className="lp-review-name">{r.name}</p>
+            <p className="lp-review-city">{r.city}</p>
+          </div>
+          <StarRow count={r.stars}/>
+        </div>
+
+        <p className="lp-review-text">{r.text}</p>
+
+        <div className="lp-review-footer">
+          <CheckCircle size={14} color="#059669"/>
+          <span>Verified Patient</span>
+        </div>
+      </div>
+    ))}
+  </div>
+</div>
         </section>
 
         {/* ══ 8. JOIN AS DOCTOR ════════════════════════════════ */}
