@@ -1,23 +1,29 @@
 import { patientApi, doctorApi, adminApi, getApi } from './axios';
 
 export const patientAuthAPI = {
+  sendOtp:            (data) => patientApi.post('/patient/auth/send-otp', data),
+  verifyOtp:          (data) => patientApi.post('/patient/auth/verify-otp', data),
   register:           (data) => patientApi.post('/patient/auth/register', data),
   login:              (data) => patientApi.post('/patient/auth/login',    data),
   logout:             ()     => patientApi.post('/patient/auth/logout'),
   me:                 ()     => patientApi.get('/patient/auth/me'),
   changePassword:     (data) => patientApi.post('/patient/auth/change-password', data),
   forgotPassword:     (data) => patientApi.post('/patient/auth/forgot-password', data),
+  verifyResetOtp:     (data) => patientApi.post('/patient/auth/verify-reset-otp', data),
   resetPassword:      (data) => patientApi.post('/patient/auth/reset-password', data),
   resendVerification: ()     => patientApi.post('/patient/auth/resend-verification'),
 };
 
 export const doctorAuthAPI = {
+  sendOtp:            (data) => doctorApi.post('/doctor/auth/send-otp', data),
+  verifyOtp:          (data) => doctorApi.post('/doctor/auth/verify-otp', data),
   register:           (data) => doctorApi.post('/doctor/auth/register', data),
   login:              (data) => doctorApi.post('/doctor/auth/login',    data),
   logout:             ()     => doctorApi.post('/doctor/auth/logout'),
   me:                 ()     => doctorApi.get('/doctor/auth/me'),
   changePassword:     (data) => doctorApi.post('/doctor/auth/change-password', data),
   forgotPassword:     (data) => doctorApi.post('/doctor/auth/forgot-password', data),
+  verifyResetOtp:     (data) => doctorApi.post('/doctor/auth/verify-reset-otp', data),
   resetPassword:      (data) => doctorApi.post('/doctor/auth/reset-password', data),
   resendVerification: ()     => doctorApi.post('/doctor/auth/resend-verification'),
 };
@@ -28,6 +34,7 @@ export const adminAuthAPI = {
   me:                 ()     => adminApi.get('/admin/auth/me'),
   changePassword:     (data) => adminApi.post('/admin/auth/change-password', data),
   forgotPassword:     (data) => adminApi.post('/admin/auth/forgot-password', data),
+  verifyResetOtp:     (data) => adminApi.post('/admin/auth/verify-reset-otp', data),
   resetPassword:      (data) => adminApi.post('/admin/auth/reset-password', data),
   resendVerification: ()     => adminApi.post('/admin/auth/resend-verification'),
 };
