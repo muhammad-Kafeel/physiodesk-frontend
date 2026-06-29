@@ -23,12 +23,13 @@ export const doctorAuthAPI = {
 };
 
 export const adminAuthAPI = {
-  login:          (data) => adminApi.post('/admin/auth/login',    data),
-  logout:         ()     => adminApi.post('/admin/auth/logout'),
-  me:             ()     => adminApi.get('/admin/auth/me'),
-  changePassword: (data) => adminApi.post('/admin/auth/change-password', data),
-  forgotPassword: (data) => adminApi.post('/admin/auth/forgot-password', data),
-  resetPassword:  (data) => adminApi.post('/admin/auth/reset-password', data),
+  login:              (data) => adminApi.post('/admin/auth/login',    data),
+  logout:             ()     => adminApi.post('/admin/auth/logout'),
+  me:                 ()     => adminApi.get('/admin/auth/me'),
+  changePassword:     (data) => adminApi.post('/admin/auth/change-password', data),
+  forgotPassword:     (data) => adminApi.post('/admin/auth/forgot-password', data),
+  resetPassword:      (data) => adminApi.post('/admin/auth/reset-password', data),
+  resendVerification: ()     => adminApi.post('/admin/auth/resend-verification'),
 };
 
 export const authAPI = {

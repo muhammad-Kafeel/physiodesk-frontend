@@ -6,7 +6,8 @@ import {
   Pill, ClipboardList, Folder, BookOpen
 } from 'lucide-react';
 import Layout from '../../components/layout/Layout';
-import { appointmentAPI, patientAPI } from '../../api/services';
+import EmailVerificationBanner from '../../components/common/EmailVerificationBanner';
+import { appointmentAPI, patientAPI, patientAuthAPI } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
 import './PatientDashboard.css';
 
@@ -40,6 +41,12 @@ export default function PatientDashboard() {
   return (
     <Layout>
       <div className="pd-container pd-section">
+
+        {/* ── Email verification banner ── */}
+        <EmailVerificationBanner
+          user={user}
+          resendFn={patientAuthAPI.resendVerification}
+        />
 
         {/* ── 1. Profile Incomplete Reminder ── */}
         {!profile && !loading && (

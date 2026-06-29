@@ -5,11 +5,14 @@ import {
   ChevronRight, CheckCircle, Stethoscope, Pill, Activity, Radio
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { adminAPI } from '../../api/services';
+import EmailVerificationBanner from '../../components/common/EmailVerificationBanner';
+import { adminAPI, adminAuthAPI } from '../../api/services';
+import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import './AdminDashboard.css';
 
 export default function AdminDashboard() {
+  const { user } = useAuth();
   const [data,    setData]    = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -37,6 +40,12 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout>
       <div className="ad-wrap">
+
+        {/* ── Email verification banner ── */}
+        <EmailVerificationBanner
+          user={user}
+          resendFn={adminAuthAPI.resendVerification}
+        />
 
         {/* Banner */}
         <div className="ad-banner">

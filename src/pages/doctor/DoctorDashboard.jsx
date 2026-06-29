@@ -6,7 +6,8 @@ import {
   AlertTriangle, Info, Activity
 } from 'lucide-react';
 import DashboardLayout from '../../components/layout/DashboardLayout';
-import { doctorAPI } from '../../api/services';
+import EmailVerificationBanner from '../../components/common/EmailVerificationBanner';
+import { doctorAPI, doctorAuthAPI } from '../../api/services';
 import { useAuth } from '../../context/AuthContext';
 import { toast } from 'react-toastify';
 import './DoctorDashboard.css';
@@ -47,11 +48,6 @@ export default function DoctorDashboard() {
     .filter(a => a.status === 'completed' && a.is_paid)
     .reduce((sum, a) => sum + Number(a.fee || 0), 0);
 
-  // H2 — Distinguish the three verification states on the dashboard. Until
-  // now we collapsed "rejected" into "pending", which meant a doctor with a
-  // rejection sitting on their profile saw a neutral "under review" banner
-  // here and had to navigate to /doctor/profile to discover anything was
-  // wrong. That's bad UX; the dashboard is the FIRST page they see.
   const isVerified = !!profile?.is_verified;
   const isRejected = !!profile && !isVerified && !!profile.rejected_reason;
   const isPending  = !!profile && !isVerified && !isRejected;
@@ -59,6 +55,12 @@ export default function DoctorDashboard() {
   return (
     <DashboardLayout>
       <div className="dd-wrap">
+
+        {/* ── Email verification banner ── */}
+        <EmailVerificationBanner
+          user={user}
+          resendFn={doctorAuthAPI.resendVerification}
+        />
 
         {/* Welcome banner */}
         <div className="dd-banner">
@@ -88,9 +90,6 @@ export default function DoctorDashboard() {
           </div>
         )}
 
-        {/* H2 — Rejected: red, urgent, with the rejection reason inline so the
-            doctor sees what to fix without having to navigate first. The link
-            takes them to the profile page where the Resubmit button lives. */}
         {isRejected && (
           <div className="dd-alert dd-alert-danger">
             <AlertTriangle size={16} />
@@ -101,7 +100,6 @@ export default function DoctorDashboard() {
           </div>
         )}
 
-        {/* Pending: neutral / informational. Shown only when there's no rejection. */}
         {isPending && (
           <div className="dd-alert dd-alert-info">
             <Info size={16} />
@@ -110,11 +108,6 @@ export default function DoctorDashboard() {
         )}
 
         {/* Stats */}
-        {/* H4.1 — Each stat card is now a clickable Link that deep-links to the
-            appointments page with the appropriate tab pre-selected, so a doctor
-            can jump from a number straight into the matching list. The
-            "Total Earnings" card links to all appointments for now — a dedicated
-            earnings page is coming in batch H3. */}
         <div className="dd-stats">
           {[
             { label: 'Total Appointments', value: appts.length,    icon: <Calendar size={20}/>,    bg: 'var(--primary-light)', color: 'var(--primary)', to: '/doctor/appointments' },
