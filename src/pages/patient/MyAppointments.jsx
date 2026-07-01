@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
-import { Calendar, Clock, Video, ChevronRight, MapPin, Star, X, RefreshCw } from "lucide-react";
+import { Calendar, Clock, Video, ChevronRight, MapPin, Star, X, RefreshCw, Loader2 } from "lucide-react";
 import Layout from "../../components/layout/Layout";
-import { appointmentAPI, reviewAPI } from "../../api/services";
+import { appointmentAPI, reviewAPI, doctorAPI } from "../../api/services";
 import { ListSkeleton } from "../../components/common/Skeleton";
 import { toast } from "react-toastify";
 import "./MyAppointments.css";
@@ -87,6 +87,11 @@ export default function MyAppointments() {
   const [newDate,       setNewDate]       = useState("");
   const [newTime,       setNewTime]       = useState("");
 
+  // Slot picker state
+  const [slots,         setSlots]         = useState([]);   // available times for chosen date
+  const [slotsLoading,  setSlotsLoading]  = useState(false);
+  const [slotsUnavail,  setSlotsUnavail]  = useState(false); // doctor on leave
+
   const [submitting, setSubmitting] = useState(false);
 
   const loadAppointments = () => {
@@ -98,6 +103,28 @@ export default function MyAppointments() {
   };
 
   useEffect(() => { loadAppointments(); }, []);
+
+  // Fetch available slots whenever the date or modal changes
+  const fetchSlots = useCallback(async (doctorId, date) => {
+    if (!doctorId || !date) { setSlots([]); return; }
+    setSlotsLoading(true);
+    setSlotsUnavail(false);
+    setNewTime("");
+    try {
+      const res = await doctorAPI.getAvailability(doctorId, date);
+      const data = res.data.data;
+      if (data.unavailable) {
+        setSlotsUnavail(true);
+        setSlots([]);
+      } else {
+        setSlots(data.available || []);
+      }
+    } catch {
+      setSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  }, []);
 
   const filtered = tab === "all" ? appts : appts.filter(a => a.status === tab);
 
@@ -138,7 +165,7 @@ export default function MyAppointments() {
   // ── Reschedule handler ─────────────────────────────────────────────────────
   const submitReschedule = async () => {
     if (!rescheduleModal) return;
-    if (!newDate || !newTime) { toast.error("Please pick a new date and time"); return; }
+    if (!newDate || !newTime) { toast.error("Please pick a date and a time slot"); return; }
     setSubmitting(true);
     try {
       await appointmentAPI.reschedule(rescheduleModal.id, {
@@ -147,7 +174,7 @@ export default function MyAppointments() {
       });
       toast.success("Appointment rescheduled");
       setRescheduleModal(null);
-      setNewDate(""); setNewTime("");
+      setNewDate(""); setNewTime(""); setSlots([]);
       loadAppointments();
     } catch (err) {
       toast.error(err.response?.data?.message || "Could not reschedule");
@@ -254,9 +281,12 @@ export default function MyAppointments() {
                         <button className="ma-cancel-btn"
                           style={{ background: "#EFF6FF", color: "#2563EB" }}
                           onClick={() => {
+                            const date = a.appointment_date || "";
                             setRescheduleModal(a);
-                            setNewDate(a.appointment_date || "");
-                            setNewTime(a.appointment_time?.slice(0,5) || "");
+                            setNewDate(date);
+                            setNewTime("");
+                            setSlots([]);
+                            if (date) fetchSlots(a.doctor_id, date);
                           }}>
                           <RefreshCw size={11} style={{ marginRight: 4 }} />
                           Reschedule
@@ -396,46 +426,159 @@ export default function MyAppointments() {
       {/* ── Reschedule Modal ──────────────────────────────────────────────── */}
       {rescheduleModal && (
         <Modal title="Reschedule Appointment"
-          onClose={() => !submitting && setRescheduleModal(null)}>
-          <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-            <p style={{ fontSize: 13, color: "var(--gray-600)" }}>
-              Pick a new date and time. The slot must be within Dr. {rescheduleModal.doctor?.user?.name}'s availability.
+          onClose={() => !submitting && (setRescheduleModal(null), setSlots([]))}>
+          <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+
+            {/* Info line */}
+            <p style={{ fontSize: 13, color: "var(--gray-600)", margin: 0 }}>
+              Pick a new date to see <b>Dr. {rescheduleModal.doctor?.user?.name}</b>'s available slots.
             </p>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 6, display: "block" }}>
-                  New Date
-                </label>
-                <input type="date"
-                  value={newDate} min={todayISO}
-                  onChange={e => setNewDate(e.target.value)}
-                  style={{
-                    width: "100%", padding: "10px 12px", fontSize: 13,
-                    border: "1px solid var(--gray-200)", borderRadius: 8, outline: "none",
-                  }} />
-              </div>
-              <div>
-                <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 6, display: "block" }}>
-                  New Time
-                </label>
-                <input type="time"
-                  value={newTime} step="1800"
-                  onChange={e => setNewTime(e.target.value)}
-                  style={{
-                    width: "100%", padding: "10px 12px", fontSize: 13,
-                    border: "1px solid var(--gray-200)", borderRadius: 8, outline: "none",
-                  }} />
-              </div>
+
+            {/* Date picker */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 6, display: "block" }}>
+                New Date
+              </label>
+              <input
+                type="date"
+                value={newDate}
+                min={todayISO}
+                onChange={e => {
+                  const d = e.target.value;
+                  setNewDate(d);
+                  fetchSlots(rescheduleModal.doctor_id, d);
+                }}
+                style={{
+                  width: "100%", padding: "10px 12px", fontSize: 13,
+                  border: "1px solid var(--gray-200)", borderRadius: 8,
+                  outline: "none", boxSizing: "border-box",
+                }}
+              />
             </div>
+
+            {/* Slot grid */}
+            <div>
+              <label style={{ fontSize: 12, fontWeight: 700, color: "var(--gray-700)", marginBottom: 8, display: "block" }}>
+                Available Time Slots
+                {newDate && !slotsLoading && slots.length > 0 && (
+                  <span style={{ fontWeight: 400, color: "var(--gray-400)", marginLeft: 6 }}>
+                    — {slots.length} slot{slots.length !== 1 ? "s" : ""} open
+                  </span>
+                )}
+              </label>
+
+              {/* States: no date chosen */}
+              {!newDate && (
+                <div style={{
+                  padding: "18px 0", textAlign: "center",
+                  color: "var(--gray-400)", fontSize: 13,
+                }}>
+                  Select a date above to view available slots.
+                </div>
+              )}
+
+              {/* States: loading */}
+              {newDate && slotsLoading && (
+                <div style={{
+                  padding: "18px 0", textAlign: "center",
+                  color: "var(--gray-400)", fontSize: 13,
+                  display: "flex", alignItems: "center", justifyContent: "center", gap: 8,
+                }}>
+                  <Loader2 size={16} style={{ animation: "spin 1s linear infinite" }} />
+                  Loading slots…
+                </div>
+              )}
+
+              {/* States: doctor on leave */}
+              {newDate && !slotsLoading && slotsUnavail && (
+                <div style={{
+                  padding: 12, borderRadius: 8,
+                  background: "#FEF9C3", color: "#92400E", fontSize: 13,
+                }}>
+                  🚫 Dr. {rescheduleModal.doctor?.user?.name} is unavailable on this date. Please pick another day.
+                </div>
+              )}
+
+              {/* States: no slots (but not on leave) */}
+              {newDate && !slotsLoading && !slotsUnavail && slots.length === 0 && newDate && (
+                <div style={{
+                  padding: 12, borderRadius: 8,
+                  background: "#FEE2E2", color: "#991B1B", fontSize: 13,
+                }}>
+                  No available slots on this date. Try a different day.
+                </div>
+              )}
+
+              {/* States: slots available — pill grid */}
+              {slots.length > 0 && !slotsLoading && (
+                <div style={{
+                  display: "flex", flexWrap: "wrap", gap: 8,
+                  maxHeight: 180, overflowY: "auto",
+                  padding: "4px 2px",
+                }}>
+                  {slots.map(t => {
+                    const selected = newTime === t;
+                    // Format: "09:00" → "9:00 AM"
+                    const [h, m] = t.split(":").map(Number);
+                    const label = `${h % 12 || 12}:${String(m).padStart(2,"0")} ${h < 12 ? "AM" : "PM"}`;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setNewTime(t)}
+                        style={{
+                          padding: "7px 14px",
+                          borderRadius: 8,
+                          fontSize: 13,
+                          fontWeight: selected ? 700 : 500,
+                          cursor: "pointer",
+                          border: selected ? "2px solid #2563EB" : "1.5px solid var(--gray-200)",
+                          background: selected ? "#EFF6FF" : "white",
+                          color: selected ? "#2563EB" : "var(--gray-700)",
+                          transition: "all .15s",
+                          display: "flex", alignItems: "center", gap: 5,
+                        }}
+                      >
+                        <Clock size={12} /> {label}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Selected summary */}
+            {newDate && newTime && (
+              <div style={{
+                padding: "10px 14px", borderRadius: 8,
+                background: "#EFF6FF", color: "#1D4ED8",
+                fontSize: 13, display: "flex", alignItems: "center", gap: 8,
+              }}>
+                <Calendar size={14} />
+                <span>
+                  <b>{newDate}</b> at{" "}
+                  <b>
+                    {(() => {
+                      const [h, m] = newTime.split(":").map(Number);
+                      return `${h % 12 || 12}:${String(m).padStart(2,"0")} ${h < 12 ? "AM" : "PM"}`;
+                    })()}
+                  </b>
+                </span>
+              </div>
+            )}
+
+            {/* Action buttons */}
             <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
               <button className="ma-cancel-btn"
-                onClick={() => setRescheduleModal(null)} disabled={submitting}>
+                onClick={() => { setRescheduleModal(null); setSlots([]); }}
+                disabled={submitting}>
                 Cancel
               </button>
               <button className="ma-pay-btn"
-                style={{ background: "#2563EB" }}
-                onClick={submitReschedule} disabled={submitting}>
-                {submitting ? "Saving..." : "Reschedule"}
+                style={{ background: "#2563EB", opacity: (!newDate || !newTime) ? 0.5 : 1 }}
+                onClick={submitReschedule}
+                disabled={submitting || !newDate || !newTime}>
+                {submitting ? "Saving…" : "Confirm Reschedule"}
               </button>
             </div>
           </div>
